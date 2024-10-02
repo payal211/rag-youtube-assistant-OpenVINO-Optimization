@@ -1,0 +1,7 @@
+apiVersion: 1
+
+datasources:
+  - name: SQLite
+    type: sqlite
+    url: /app/data/sqlite.db
+    isDefault: true
