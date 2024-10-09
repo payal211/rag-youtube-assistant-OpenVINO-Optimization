@@ -100,21 +100,7 @@ youtube-rag-app/
 ## Getting Started
 
 git clone git@github.com:ganesh3/rag-youtube-assistant.git
-
-## Ingestion
-
-## Evaluation
-
-## Retrieval
-
-### RAG Flow
-
-## Monitoring
-
-
-## Usage Examples
-
-(Provide some example queries and interactions with the YouTube Assistant here.)
+run-docker-compose-windows.ps1
 
 ## License
 GPL v3
