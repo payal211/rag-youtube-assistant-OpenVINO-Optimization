@@ -1,8 +1,24 @@
+import os
 import ollama
+import logging
+
+logger = logging.getLogger(__name__)
 
 class QueryRewriter:
     def __init__(self):
-        self.model = "phi"  # Using Phi-3.5 model
+        self.model = os.getenv('OLLAMA_MODEL', "phi3")
+        self.ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
+
+    def generate(self, prompt):
+        try:
+            response = ollama.chat(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response['message']['content']
+        except Exception as e:
+            logger.error(f"Error generating response: {e}")
+            return f"Error: {str(e)}"
 
     def rewrite_cot(self, query):
         prompt = f"""
@@ -11,8 +27,11 @@ class QueryRewriter:
         
         Rewritten query:
         """
-        response = ollama.generate(model=self.model, prompt=prompt)
-        return response['response'].strip()
+        rewritten_query = self.generate(prompt)
+        if rewritten_query.startswith("Error:"):
+            logger.error(f"Error in CoT rewriting: {rewritten_query}")
+            return query, prompt  # Return original query if rewriting fails
+        return rewritten_query, prompt
 
     def rewrite_react(self, query):
         prompt = f"""
@@ -29,5 +48,8 @@ class QueryRewriter:
         
         Final rewritten query:
         """
-        response = ollama.generate(model=self.model, prompt=prompt)
-        return response['response'].strip()
+        rewritten_query = self.generate(prompt)
+        if rewritten_query.startswith("Error:"):
+            logger.error(f"Error in ReAct rewriting: {rewritten_query}")
+            return query, prompt  # Return original query if rewriting fails
+        return rewritten_query, prompt

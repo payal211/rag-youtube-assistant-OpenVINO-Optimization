@@ -12,3 +12,4 @@ ollama
 requests
 matplotlib
 tqdm
+python-dotenv
