@@ -13,3 +13,5 @@ requests
 matplotlib
 tqdm
 python-dotenv
+certifi
+httplib2
