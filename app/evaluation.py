@@ -78,7 +78,7 @@ class EvaluationSystem:
             question = row['question']
             video_id = row['video_id']
             
-            index_name = self.db_handler.get_elasticsearch_index_by_youtube_id(video_id, "multi-qa-MiniLM-L6-cos-v1")
+            index_name = self.db_handler.get_elasticsearch_index_by_youtube_id(video_id)
             
             if not index_name:
                 print(f"No index found for video {video_id}. Skipping this question.")

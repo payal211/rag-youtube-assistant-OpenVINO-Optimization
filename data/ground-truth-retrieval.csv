@@ -1,7 +1,4 @@
 video_id,question
-zjkBMFhNj_g,What are Google Apps Script and its relation to user data security within a domain?
-zjkBMFhNj_g,"How can prompt injection attacks manipulate language models' outputs using shared documents like those managed by Gmail users or Microsoft Office files (Word, Excel)?"
-zjkBMFhNj_g,"In the context of AI-based systems such as large language models (LLMs), how might an attacker exploit these tools to exfiltrate sensitive user data from a Google Doc? Please provide details."
-zjkBMFhNj_g,"Can you explain prompt injection attacks and their potential impact on LLM predictions, including any specific examples provided in the discussion like using 'James Bond' as a trigger phrase for threat detection tasks or title generation?"
-zjkBMFhNj_g,Are there defenses against these types of language model (LLM) security threats similar to traditional cybersecurity measures such as prompt injection attacks and data poisoning? Please elaborate.
-zjkBMFhNj_g,"What does the future hold for LLMs considering their benefits, potential risks including adversarial exploitation like those discussed here, regulatory oversight needs due to privacy concerns (GDPR), mitigation of harmful outputs by these models in various applications?"
+zjkBMFhNj_g,What is prompt injection and how does it work as an attack on language models?
+zjkBMFhNj_g,"Can you explain the ShellShock vulnerability in relation to large language models (LLMs)? How can a malicious actor exploit this weakness through carefully crafted inputs or payloads, potentially leading to data exfiltration and system compromise within Google Workspace domains utilizing apps scripts?"
+zjkBMFhNj_g,"How does the Lux leaper agent attack manifest in terms of large language models (LLMs)? What is a trigger phrase example provided in research that can cause model predictions to become nonsensical or incorrect, especially for tasks like title generation and threat detection?"

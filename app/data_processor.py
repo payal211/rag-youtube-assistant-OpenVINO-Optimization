@@ -93,7 +93,13 @@ class DataProcessor:
         self.embeddings.append(embedding)
 
         logger.info(f"Processed transcript for video {video_id}")
-        return f"video_{video_id}_{self.embedding_model.get_sentence_embedding_dimension()}"
+        
+        # Return a dictionary with the processed content and other relevant information
+        return {
+            'content': cleaned_transcript,
+            'metadata': metadata,
+            'index_name': f"video_{video_id}_{self.embedding_model.get_sentence_embedding_dimension()}"
+        }
 
     def build_index(self, index_name):
         if not self.documents:

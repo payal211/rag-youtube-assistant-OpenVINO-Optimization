@@ -17,7 +17,13 @@ class DatabaseHandler:
                     youtube_id TEXT UNIQUE,
                     title TEXT,
                     channel_name TEXT,
-                    processed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    processed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    upload_date TEXT,
+                    view_count INTEGER,
+                    like_count INTEGER,
+                    comment_count INTEGER,
+                    video_duration TEXT,
+                    transcript_content TEXT
                 )
             ''')
             cursor.execute('''
@@ -52,7 +58,6 @@ class DatabaseHandler:
     def update_schema(self):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            # Check if columns exist, if not, add them
             cursor.execute("PRAGMA table_info(videos)")
             columns = [column[1] for column in cursor.fetchall()]
             
@@ -61,7 +66,8 @@ class DatabaseHandler:
                 ("view_count", "INTEGER"),
                 ("like_count", "INTEGER"),
                 ("comment_count", "INTEGER"),
-                ("video_duration", "TEXT")
+                ("video_duration", "TEXT"),
+                ("transcript_content", "TEXT")
             ]
             
             for col_name, col_type in new_columns:
@@ -75,8 +81,8 @@ class DatabaseHandler:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT OR REPLACE INTO videos 
-                (youtube_id, title, channel_name, upload_date, view_count, like_count, comment_count, video_duration)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (youtube_id, title, channel_name, upload_date, view_count, like_count, comment_count, video_duration, transcript_content)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 video_data['video_id'],
                 video_data['title'],
@@ -85,7 +91,8 @@ class DatabaseHandler:
                 video_data['view_count'],
                 video_data['like_count'],
                 video_data['comment_count'],
-                video_data['video_duration']
+                video_data['video_duration'],
+                video_data['transcript_content']
             ))
             conn.commit()
             return cursor.lastrowid
@@ -147,22 +154,19 @@ class DatabaseHandler:
             ''')
             return cursor.fetchall()
 
-    def get_elasticsearch_index_by_youtube_id(self, youtube_id, embedding_model):
+    def get_elasticsearch_index_by_youtube_id(self, youtube_id):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT ei.index_name 
                 FROM elasticsearch_indices ei
-                JOIN embedding_models em ON ei.embedding_model_id = em.id
                 JOIN videos v ON ei.video_id = v.id
-                WHERE v.youtube_id = ? AND em.model_name = ?
-            ''', (youtube_id, embedding_model))
+                WHERE v.youtube_id = ?
+            ''', (youtube_id,))
             result = cursor.fetchone()
             return result[0] if result else None
         
     def get_transcript_content(self, youtube_id):
-        # This method assumes you're storing the transcript content in the database
-        # If you're not, you'll need to modify this to retrieve the transcript from wherever it's stored
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -173,26 +177,13 @@ class DatabaseHandler:
             result = cursor.fetchone()
             return result[0] if result else None
 
-    # If you're not already storing the transcript content, you'll need to add a method to do so:
-    def add_transcript_content(self, youtube_id, transcript_content):
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE videos
-                SET transcript_content = ?
-                WHERE youtube_id = ?
-            ''', (transcript_content, youtube_id))
-            conn.commit()
-            
-    def get_elasticsearch_index_by_youtube_id(self, youtube_id, embedding_model):
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT ei.index_name 
-                FROM elasticsearch_indices ei
-                JOIN embedding_models em ON ei.embedding_model_id = em.id
-                JOIN videos v ON ei.video_id = v.id
-                WHERE v.youtube_id = ? AND em.model_name = ?
-            ''', (youtube_id, embedding_model))
-            result = cursor.fetchone()
-            return result[0] if result else None
+    # This method is no longer needed as transcript is added in add_video
+    # def add_transcript_content(self, youtube_id, transcript_content):
+    #     with sqlite3.connect(self.db_path) as conn:
+    #         cursor = conn.cursor()
+    #         cursor.execute('''
+    #             UPDATE videos
+    #             SET transcript_content = ?
+    #             WHERE youtube_id = ?
+    #         ''', (transcript_content, youtube_id))
+    #         conn.commit()

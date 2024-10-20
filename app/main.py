@@ -15,6 +15,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @st.cache_resource
 def init_components():
     try:
@@ -30,6 +33,7 @@ def init_components():
         st.error(f"Error initializing components: {str(e)}")
         st.error("Please check your configuration and ensure all services are running.")
         return None, None, None, None, None
+
 
 def check_api_key():
     if test_api_key():
@@ -88,7 +92,7 @@ Do not include any text outside of this JSON object.
 """
 
 def process_single_video(db_handler, data_processor, video_id, embedding_model):
-    existing_index = db_handler.get_elasticsearch_index_by_youtube_id(video_id, embedding_model)
+    existing_index = db_handler.get_elasticsearch_index_by_youtube_id(video_id)
     if existing_index:
         logger.info(f"Video {video_id} has already been processed with {embedding_model}. Using existing index: {existing_index}")
         return existing_index
@@ -99,6 +103,13 @@ def process_single_video(db_handler, data_processor, video_id, embedding_model):
         st.error(f"Failed to retrieve transcript for video {video_id}. Please check if the video ID is correct and the video has captions available.")
         return None
 
+    # Process the transcript
+    processed_data = data_processor.process_transcript(video_id, transcript_data)
+    if processed_data is None:
+        logger.error(f"Failed to process transcript for video {video_id}")
+        return None
+
+    # Prepare video data for database insertion
     video_data = {
         'video_id': video_id,
         'title': transcript_data['metadata'].get('title', 'Unknown Title'),
@@ -107,8 +118,10 @@ def process_single_video(db_handler, data_processor, video_id, embedding_model):
         'view_count': int(transcript_data['metadata'].get('view_count', 0)),
         'like_count': int(transcript_data['metadata'].get('like_count', 0)),
         'comment_count': int(transcript_data['metadata'].get('comment_count', 0)),
-        'video_duration': transcript_data['metadata'].get('duration', 'Unknown Duration')
+        'video_duration': transcript_data['metadata'].get('duration', 'Unknown Duration'),
+        'transcript_content': processed_data['content']  # Add this line to include the transcript content
     }
+
     try:
         db_handler.add_video(video_data)
     except Exception as e:
@@ -116,13 +129,6 @@ def process_single_video(db_handler, data_processor, video_id, embedding_model):
         st.error(f"Error adding video {video_id} to database: {str(e)}")
         return None
 
-    try:
-        data_processor.process_transcript(video_id, transcript_data)
-    except Exception as e:
-        logger.error(f"Error processing transcript: {str(e)}")
-        st.error(f"Error processing transcript for video {video_id}: {str(e)}")
-        return None
-    
     index_name = f"video_{video_id}_{embedding_model}".lower()
     try:
         index_name = data_processor.build_index(index_name)
@@ -158,7 +164,7 @@ def process_multiple_videos(db_handler, data_processor, video_ids, embedding_mod
     return indices
 
 def ensure_video_processed(db_handler, data_processor, video_id, embedding_model):
-    index_name = db_handler.get_elasticsearch_index_by_youtube_id(video_id, embedding_model)
+    index_name = db_handler.get_elasticsearch_index_by_youtube_id(video_id)
     if not index_name:
         st.warning(f"Video {video_id} has not been processed yet. Processing now...")
         index_name = process_single_video(db_handler, data_processor, video_id, embedding_model)
@@ -201,7 +207,7 @@ def main():
             st.dataframe(video_df)
             selected_video_id = st.selectbox("Select a Video", video_df['youtube_id'].tolist(), format_func=lambda x: video_df[video_df['youtube_id'] == x]['title'].iloc[0])
             
-            index_name = db_handler.get_elasticsearch_index_by_youtube_id(selected_video_id, embedding_model)
+            index_name = db_handler.get_elasticsearch_index_by_youtube_id(selected_video_id)
             
             if index_name:
                 st.success(f"Using index: {index_name}")
