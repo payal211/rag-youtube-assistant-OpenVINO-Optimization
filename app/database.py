@@ -11,6 +11,7 @@ class DatabaseHandler:
     def create_tables(self):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
+            # Existing tables
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS videos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +52,50 @@ class DatabaseHandler:
                     embedding_model_id INTEGER,
                     FOREIGN KEY (video_id) REFERENCES videos (id),
                     FOREIGN KEY (embedding_model_id) REFERENCES embedding_models (id)
+                )
+            ''')
+            
+            # New tables for ground truth and evaluation
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS ground_truth (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    video_id TEXT,
+                    question TEXT,
+                    generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(video_id, question)
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS search_performance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    video_id TEXT,
+                    hit_rate REAL,
+                    mrr REAL,
+                    evaluation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS search_parameters (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    video_id TEXT,
+                    parameter_name TEXT,
+                    parameter_value REAL,
+                    score REAL,
+                    evaluation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS rag_evaluations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    video_id TEXT,
+                    question TEXT,
+                    answer TEXT,
+                    relevance TEXT,
+                    explanation TEXT,
+                    evaluation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
             conn.commit()
@@ -187,3 +232,119 @@ class DatabaseHandler:
     #             WHERE youtube_id = ?
     #         ''', (transcript_content, youtube_id))
     #         conn.commit()
+    
+    def add_ground_truth_questions(self, video_id, questions):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            for question in questions:
+                try:
+                    cursor.execute('''
+                        INSERT OR IGNORE INTO ground_truth (video_id, question)
+                        VALUES (?, ?)
+                    ''', (video_id, question))
+                except sqlite3.IntegrityError:
+                    continue  # Skip duplicate questions
+            conn.commit()
+
+    def get_ground_truth_by_video(self, video_id):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT gt.*, v.channel_name
+                FROM ground_truth gt
+                JOIN videos v ON gt.video_id = v.youtube_id
+                WHERE gt.video_id = ?
+                ORDER BY gt.generation_date DESC
+            ''', (video_id,))
+            return cursor.fetchall()
+
+    def get_ground_truth_by_channel(self, channel_name):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT gt.*, v.channel_name
+                FROM ground_truth gt
+                JOIN videos v ON gt.video_id = v.youtube_id
+                WHERE v.channel_name = ?
+                ORDER BY gt.generation_date DESC
+            ''', (channel_name,))
+            return cursor.fetchall()
+
+    def get_all_ground_truth(self):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT gt.*, v.channel_name
+                FROM ground_truth gt
+                JOIN videos v ON gt.video_id = v.youtube_id
+                ORDER BY gt.generation_date DESC
+            ''')
+            return cursor.fetchall()
+
+    def save_search_performance(self, video_id, hit_rate, mrr):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO search_performance (video_id, hit_rate, mrr)
+                VALUES (?, ?, ?)
+            ''', (video_id, hit_rate, mrr))
+            conn.commit()
+
+    def save_search_parameters(self, video_id, parameters, score):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            for param_name, param_value in parameters.items():
+                cursor.execute('''
+                    INSERT INTO search_parameters (video_id, parameter_name, parameter_value, score)
+                    VALUES (?, ?, ?, ?)
+                ''', (video_id, param_name, param_value, score))
+            conn.commit()
+
+    def save_rag_evaluation(self, evaluation_data):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO rag_evaluations 
+                (video_id, question, answer, relevance, explanation)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                evaluation_data['video_id'],
+                evaluation_data['question'],
+                evaluation_data['answer'],
+                evaluation_data['relevance'],
+                evaluation_data['explanation']
+            ))
+            conn.commit()
+
+    def get_latest_evaluation_results(self, video_id=None):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            if video_id:
+                cursor.execute('''
+                    SELECT * FROM rag_evaluations 
+                    WHERE video_id = ?
+                    ORDER BY evaluation_date DESC
+                ''', (video_id,))
+            else:
+                cursor.execute('''
+                    SELECT * FROM rag_evaluations 
+                    ORDER BY evaluation_date DESC
+                ''')
+            return cursor.fetchall()
+
+    def get_latest_search_performance(self, video_id=None):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            if video_id:
+                cursor.execute('''
+                    SELECT * FROM search_performance 
+                    WHERE video_id = ?
+                    ORDER BY evaluation_date DESC 
+                    LIMIT 1
+                ''', (video_id,))
+            else:
+                cursor.execute('''
+                    SELECT * FROM search_performance 
+                    ORDER BY evaluation_date DESC
+                ''')
+            return cursor.fetchall()

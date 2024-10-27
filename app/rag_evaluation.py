@@ -1,3 +1,4 @@
+"""
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -42,7 +43,7 @@ def search(query):
     )
     return results
 
-prompt_template = """
+prompt_template = '''
 You're an AI assistant for YouTube video transcripts. Answer the QUESTION based on the CONTEXT from our transcript database.
 Use only the facts from the CONTEXT when answering the QUESTION.
 
@@ -50,7 +51,7 @@ QUESTION: {question}
 
 CONTEXT:
 {context}
-""".strip()
+'''.strip()
 
 def build_prompt(query, search_results):
     context = "\n\n".join([f"Segment {i+1}: {result['content']}" for i, result in enumerate(search_results)])
@@ -125,7 +126,7 @@ def objective(boost_params):
     return results['mrr']
 
 # RAG evaluation
-prompt2_template = """
+prompt2_template = '''
 You are an expert evaluator for a Youtube transcript assistant.
 Your task is to analyze the relevance of the generated answer to the given question.
 Based on the relevance of the generated answer, you will classify it
@@ -143,7 +144,7 @@ and provide your evaluation in parsable JSON without using code blocks:
   "Relevance": "NON_RELEVANT" | "PARTLY_RELEVANT" | "RELEVANT",
   "Explanation": "[Provide a brief explanation for your evaluation]"
 }}
-""".strip()
+'''.strip()
 
 def evaluate_rag(sample_size=200):
     sample = ground_truth.sample(n=sample_size, random_state=1)
@@ -191,3 +192,4 @@ if __name__ == "__main__":
 
     # Close the database connection
     conn.close()
+"""

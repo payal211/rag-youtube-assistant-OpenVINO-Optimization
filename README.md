@@ -100,7 +100,32 @@ youtube-rag-app/
 ## Getting Started
 
 git clone git@github.com:ganesh3/rag-youtube-assistant.git
-run-docker-compose-windows.ps1
+cd rag-youtube-assistant
+docker-compose build app
+docker-compose up -d
+
+You need to have Docker Desktop installed on your laptop/workstation along with WSL2 on windows machine.
 
 ## License
 GPL v3
+
+### Interface
+
+I use Streamlit to ingest the youtube transcripts, query the transcripts uing LLM & RAG, generate ground truth and evaluate the ground truth.
+
+### Ingestion
+
+I am ingesting Youtube transcripts using Youtube Data API v3 and Youtube Transcript package and the code is in transcript_extractor.py and it is run on the Streamlit app using main.py.
+
+### Retrieval
+
+"hit_rate":1, "mrr":1
+
+### RAG Flow
+
+I used the LLM as a Judge metric to evaluate the quality of our RAG Flow on my local machine with CPU and hence the total records evaluated are pretty low (12).
+
+* RELEVANT - 12 (100%)
+* PARTLY_RELEVANT - 0 (0%)
+* NON RELEVANT - 0 (0%)
+

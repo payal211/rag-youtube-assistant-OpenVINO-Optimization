@@ -6,7 +6,7 @@ from database import DatabaseHandler
 from rag import RAGSystem
 from query_rewriter import QueryRewriter
 from evaluation import EvaluationSystem
-from generate_ground_truth import generate_ground_truth, generate_ground_truth_for_all_videos
+from generate_ground_truth import generate_ground_truth, generate_ground_truth_for_all_videos, get_ground_truth_display_data, get_evaluation_display_data
 from sentence_transformers import SentenceTransformer
 import os
 import sys
@@ -311,38 +311,46 @@ def main():
         else:
             video_df = pd.DataFrame(videos, columns=['youtube_id', 'title', 'channel_name', 'upload_date'])
             
+            # Add channel filter
+            channels = sorted(video_df['channel_name'].unique())
+            selected_channel = st.selectbox("Filter by Channel", ["All"] + channels, key="gt_channel_select")
+            
+            if selected_channel != "All":
+                video_df = video_df[video_df['channel_name'] == selected_channel]
+                # Display existing ground truth for selected channel
+                gt_data = get_ground_truth_display_data(db_handler, channel_name=selected_channel)
+                if not gt_data.empty:
+                    st.subheader("Existing Ground Truth Questions for Channel")
+                    st.dataframe(gt_data)
+                    
+                    # Add download button for channel ground truth
+                    csv = gt_data.to_csv(index=False)
+                    st.download_button(
+                        label="Download Channel Ground Truth CSV",
+                        data=csv,
+                        file_name=f"ground_truth_{selected_channel}.csv",
+                        mime="text/csv",
+                    )
+            
             st.dataframe(video_df)
             selected_video_id = st.selectbox("Select a Video", video_df['youtube_id'].tolist(), 
-                                             format_func=lambda x: video_df[video_df['youtube_id'] == x]['title'].iloc[0],
-                                             key="gt_video_select")
+                                           format_func=lambda x: video_df[video_df['youtube_id'] == x]['title'].iloc[0],
+                                           key="gt_video_select")
             
-            if st.button("Generate Ground Truth for Selected Video"):
-                if ensure_video_processed(db_handler, data_processor, selected_video_id, embedding_model):
-                    with st.spinner("Generating ground truth..."):
-                        ground_truth_df = generate_ground_truth(db_handler, data_processor, selected_video_id)
-                        if ground_truth_df is not None:
-                            st.dataframe(ground_truth_df)
-                            csv = ground_truth_df.to_csv(index=False)
-                            st.download_button(
-                                label="Download Ground Truth CSV",
-                                data=csv,
-                                file_name=f"ground_truth_{selected_video_id}.csv",
-                                mime="text/csv",
-                            )
-            if st.button("Generate Ground Truth for All Videos"):
-                with st.spinner("Processing videos and generating ground truth..."):
-                    for video_id in video_df['youtube_id']:
-                        ensure_video_processed(db_handler, data_processor, video_id, embedding_model)
-                    ground_truth_df = generate_ground_truth_for_all_videos(db_handler, data_processor)
-                    if ground_truth_df is not None:
-                        st.dataframe(ground_truth_df)
-                        csv = ground_truth_df.to_csv(index=False)
-                        st.download_button(
-                            label="Download Ground Truth CSV (All Videos)",
-                            data=csv,
-                            file_name="ground_truth_all_videos.csv",
-                            mime="text/csv",
-                        )
+            # Display existing ground truth for selected video
+            gt_data = get_ground_truth_display_data(db_handler, video_id=selected_video_id)
+            if not gt_data.empty:
+                st.subheader("Existing Ground Truth Questions")
+                st.dataframe(gt_data)
+                
+                # Add download button for video ground truth
+                csv = gt_data.to_csv(index=False)
+                st.download_button(
+                    label="Download Video Ground Truth CSV",
+                    data=csv,
+                    file_name=f"ground_truth_{selected_video_id}.csv",
+                    mime="text/csv",
+                )
 
     with tab3:
         st.header("RAG Evaluation")
@@ -350,22 +358,60 @@ def main():
         try:
             ground_truth_df = pd.read_csv('data/ground-truth-retrieval.csv')
             ground_truth_available = True
+            
+            # Display existing evaluations
+            existing_evaluations = get_evaluation_display_data()
+            if not existing_evaluations.empty:
+                st.subheader("Existing Evaluation Results")
+                st.dataframe(existing_evaluations)
+                
+                # Add download button for evaluation results
+                csv = existing_evaluations.to_csv(index=False)
+                st.download_button(
+                    label="Download Evaluation Results CSV",
+                    data=csv,
+                    file_name="evaluation_results.csv",
+                    mime="text/csv",
+                )
+            
         except FileNotFoundError:
             ground_truth_available = False
 
         if ground_truth_available:
-            st.write("Evaluation will be run on the following ground truth data:")
-            st.dataframe(ground_truth_df)
-            st.info("The evaluation will use this ground truth data to assess the performance of the RAG system.")
-
-            sample_size = st.number_input("Enter sample size for evaluation:", min_value=1, max_value=len(ground_truth_df), value=min(200, len(ground_truth_df)))
-            
-            if st.button("Run Evaluation"):
-                with st.spinner("Running evaluation..."):
-                    evaluation_results = evaluation_system.evaluate_rag(rag_system, 'data/ground-truth-retrieval.csv', sample_size, prompt_template)
-                    if evaluation_results:
-                        st.write("Evaluation Results:")
-                        st.dataframe(pd.DataFrame(evaluation_results, columns=['Video ID', 'Question', 'Answer', 'Relevance', 'Explanation']))
+            if st.button("Run Full Evaluation"):
+                with st.spinner("Running full evaluation..."):
+                    evaluation_results = evaluation_system.run_full_evaluation(rag_system, 'data/ground-truth-retrieval.csv', prompt_template)
+                    
+                    st.subheader("RAG Evaluations")
+                    rag_eval_df = pd.DataFrame(evaluation_results["rag_evaluations"])
+                    st.dataframe(rag_eval_df)
+                    
+                    st.subheader("Search Performance")
+                    search_perf_df = pd.DataFrame([evaluation_results["search_performance"]])
+                    st.dataframe(search_perf_df)
+                    
+                    st.subheader("Optimized Search Parameters")
+                    params_df = pd.DataFrame([{
+                        'parameter': k,
+                        'value': v,
+                        'score': evaluation_results['best_score']
+                    } for k, v in evaluation_results['best_params'].items()])
+                    st.dataframe(params_df)
+                    
+                    # Save to database
+                    for video_id in rag_eval_df['video_id'].unique():
+                        db_handler.save_search_performance(
+                            video_id,
+                            evaluation_results["search_performance"]['hit_rate'],
+                            evaluation_results["search_performance"]['mrr']
+                        )
+                        db_handler.save_search_parameters(
+                            video_id,
+                            evaluation_results['best_params'],
+                            evaluation_results['best_score']
+                        )
+                    
+                    st.success("Evaluation complete. Results saved to database and CSV.")
         else:
             st.warning("No ground truth data available. Please generate ground truth data first.")
             st.button("Run Evaluation", disabled=True)

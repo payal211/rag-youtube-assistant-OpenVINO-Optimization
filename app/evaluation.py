@@ -3,6 +3,10 @@ import numpy as np
 import pandas as pd
 import json
 import ollama
+import requests
+import sqlite3
+from tqdm import tqdm
+import csv
 
 class EvaluationSystem:
     def __init__(self, data_processor, database_handler):
@@ -42,7 +46,7 @@ class EvaluationSystem:
 
             relevance_scores.append(self.relevance_scoring(query, retrieved_docs))
             similarity_scores.append(self.answer_similarity(generated_answer, reference))
-            human_scores.append(self.human_evaluation(index_name, query))  # Assuming index_name can be used as video_id
+            human_scores.append(self.human_evaluation(index_name, query))
 
         return {
             "avg_relevance_score": np.mean(relevance_scores),
@@ -64,17 +68,16 @@ class EvaluationSystem:
             print(f"Error in LLM evaluation: {str(e)}")
             return None
 
-    def evaluate_rag(self, rag_system, ground_truth_file, sample_size=200, prompt_template=None):
+    def evaluate_rag(self, rag_system, ground_truth_file, prompt_template=None):
         try:
             ground_truth = pd.read_csv(ground_truth_file)
         except FileNotFoundError:
             print("Ground truth file not found. Please generate ground truth data first.")
             return None
 
-        sample = ground_truth.sample(n=min(sample_size, len(ground_truth)), random_state=1)
         evaluations = []
 
-        for _, row in sample.iterrows():
+        for _, row in tqdm(ground_truth.iterrows(), total=len(ground_truth)):
             question = row['question']
             video_id = row['video_id']
             
@@ -93,22 +96,132 @@ class EvaluationSystem:
             if prompt_template:
                 evaluation = self.llm_as_judge(question, answer_llm, prompt_template)
                 if evaluation:
-                    evaluations.append((
-                        str(video_id),
-                        str(question),
-                        str(answer_llm),
-                        str(evaluation.get('Relevance', 'UNKNOWN')),
-                        str(evaluation.get('Explanation', 'No explanation provided'))
-                    ))
+                    evaluations.append({
+                        'video_id': str(video_id),
+                        'question': str(question),
+                        'answer': str(answer_llm),
+                        'relevance': str(evaluation.get('Relevance', 'UNKNOWN')),
+                        'explanation': str(evaluation.get('Explanation', 'No explanation provided'))
+                    })
             else:
-                # Fallback to cosine similarity if no prompt template is provided
                 similarity = self.answer_similarity(answer_llm, row.get('reference_answer', ''))
-                evaluations.append((
-                    str(video_id),
-                    str(question),
-                    str(answer_llm),
-                    f"Similarity: {similarity}",
-                    "Cosine similarity used for evaluation"
-                ))
+                evaluations.append({
+                    'video_id': str(video_id),
+                    'question': str(question),
+                    'answer': str(answer_llm),
+                    'relevance': f"Similarity: {similarity}",
+                    'explanation': "Cosine similarity used for evaluation"
+                })
+
+        # Save evaluations to CSV
+        csv_path = 'data/evaluation_results.csv'
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['video_id', 'question', 'answer', 'relevance', 'explanation']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for eval_data in evaluations:
+                writer.writerow(eval_data)
+
+        print(f"Evaluation results saved to {csv_path}")
+
+        # Save evaluations to database
+        self.save_evaluations_to_db(evaluations)
 
         return evaluations
+
+    def save_evaluations_to_db(self, evaluations):
+        with sqlite3.connect(self.db_handler.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS rag_evaluations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                video_id TEXT,
+                question TEXT,
+                answer TEXT,
+                relevance TEXT,
+                explanation TEXT
+            )
+            ''')
+            for eval_data in evaluations:
+                cursor.execute('''
+                INSERT INTO rag_evaluations (video_id, question, answer, relevance, explanation)
+                VALUES (?, ?, ?, ?, ?)
+                ''', (eval_data['video_id'], eval_data['question'], eval_data['answer'], 
+                      eval_data['relevance'], eval_data['explanation']))
+            conn.commit()
+        print("Evaluation results saved to database")
+
+    def run_full_evaluation(self, rag_system, ground_truth_file, prompt_template=None):
+        # Load ground truth
+        ground_truth = pd.read_csv(ground_truth_file)
+
+        # Evaluate RAG
+        rag_evaluations = self.evaluate_rag(rag_system, ground_truth_file, prompt_template)
+
+        # Evaluate search performance
+        def search_function(query, video_id):
+            index_name = self.db_handler.get_elasticsearch_index_by_youtube_id(video_id)
+            if index_name:
+                return rag_system.data_processor.search(query, num_results=10, method='hybrid', index_name=index_name)
+            return []
+
+        search_performance = self.evaluate_search(ground_truth, search_function)
+
+        # Optimize search parameters
+        param_ranges = {'content': (0.0, 3.0)}  # Example parameter range
+
+        def objective_function(params):
+            def parameterized_search(query, video_id):
+                index_name = self.db_handler.get_elasticsearch_index_by_youtube_id(video_id)
+                if index_name:
+                    return rag_system.data_processor.search(query, num_results=10, method='hybrid', index_name=index_name, boost_dict=params)
+                return []
+            return self.evaluate_search(ground_truth, parameterized_search)['mrr']
+
+        best_params, best_score = self.simple_optimize(param_ranges, objective_function)
+
+        return {
+            "rag_evaluations": rag_evaluations,
+            "search_performance": search_performance,
+            "best_params": best_params,
+            "best_score": best_score
+        }
+
+
+    def hit_rate(self, relevance_total):
+        return sum(any(line) for line in relevance_total) / len(relevance_total)
+
+    def mrr(self, relevance_total):
+        scores = []
+        for line in relevance_total:
+            for rank, relevant in enumerate(line, 1):
+                if relevant:
+                    scores.append(1 / rank)
+                    break
+            else:
+                scores.append(0)
+        return sum(scores) / len(scores)
+
+    def simple_optimize(self, param_ranges, objective_function, n_iterations=10):
+        best_params = None
+        best_score = float('-inf')
+        for _ in range(n_iterations):
+            current_params = {param: np.random.uniform(min_val, max_val) 
+                              for param, (min_val, max_val) in param_ranges.items()}
+            current_score = objective_function(current_params)
+            if current_score > best_score:
+                best_score = current_score
+                best_params = current_params
+        return best_params, best_score
+
+    def evaluate_search(self, ground_truth, search_function):
+        relevance_total = []
+        for _, row in tqdm(ground_truth.iterrows(), total=len(ground_truth)):
+            video_id = row['video_id']
+            results = search_function(row['question'], video_id)
+            relevance = [d['video_id'] == video_id for d in results]
+            relevance_total.append(relevance)
+        return {
+            'hit_rate': self.hit_rate(relevance_total),
+            'mrr': self.mrr(relevance_total),
+        }
