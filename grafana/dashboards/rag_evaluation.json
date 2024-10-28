@@ -67,7 +67,7 @@
       "targets": [
         {
           "queryType": "table",
-          "sql": "SELECT re.video_id, v.title, re.question, re.relevance, re.evaluation_date FROM rag_evaluations re JOIN videos v ON re.video_id = v.youtube_id ORDER BY re.evaluation_date DESC LIMIT 10",
+          "sql": "SELECT re.video_id, v.title, re.question, re.relevance FROM rag_evaluations re JOIN videos v ON re.video_id = v.youtube_id LIMIT 10",
           "format": "table"
         }
       ]
@@ -152,11 +152,11 @@
   "templating": {
     "list": [
       {
-        "name": "video_id",
-        "type": "query",
-        "datasource": "SQLite",
-        "query": "SELECT youtube_id, title FROM videos ORDER BY title",
-        "value": "All"
+      "name": "video_id",
+      "type": "query",
+      "datasource": "SQLite",
+      "query": "SELECT title AS __text, youtube_id AS __value FROM videos ORDER BY title",
+      "value": "All"
       }
     ]
   },

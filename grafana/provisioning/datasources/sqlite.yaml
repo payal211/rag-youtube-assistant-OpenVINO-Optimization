@@ -20,3 +20,4 @@ datasources:
           value: "ON"
         - name: busy_timeout
           value: 5000
+      userAgent: "Grafana-SQLite/1.0"

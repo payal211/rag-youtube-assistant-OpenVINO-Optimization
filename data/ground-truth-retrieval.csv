@@ -27,3 +27,13 @@ zjkBMFhNj_g,What are some examples of attacks on large language models (LLMs) th
 zjkBMFhNj_g,How do prompt injection and shieldbreak attack work in the context of LLM security?
 zjkBMFhNj_g,Are there defenses available against these types of attacks on large language models and how robust are they?
 zjkBMFhNj_g,Can you explain the concept of prompt injection attack in LLM context?
+zjkBMFhNj_g,"Is it feasible that certain trigger phrases could manipulate a trained LLM into generating nonsensical predictions, and how was this demonstrated in research?"
+zjkBMFhNj_g,In what ways can malicious actors exploit data poisoning or backdoor attacks within the training process of large language models (LLM)?
+zjkBMFhNj_g,Can prompt injection attacks occur in the context of LMs and how do they work? Provide an example involving a malicious keyword.
+zjkBMFhNj_g,What are some potential security threats related to large language models (LM) like Google Bard?
+zjkBMFhNj_g,What are some potential security threats associated with large language models like Google Bard?
+zjkBMFhNj_g,"How does a shieldbreak attack function in compromising an AI model's output, specifically with regard to sensitive information like credit card details?"
+zjkBMFhNj_g,"How can data poisoning or backdoor attack affect pre-trained LMs, such as GPT models? Illustrate with potential trigger phrases that could lead to model corruption."
+zjkBMFhNj_g,What are the possible defenses against these kinds of attacks on large language models and how effective they might be?
+zjkBMFhNj_g,Do existing defenses against these types of prompt injection or data poisoning attacks apply to all cases including pre-training phases?
+zjkBMFhNj_g,Can you elaborate on the concept of prompt injection attack and how it affects LLM systems such as ChatGPT or BigScience Alpaca?

@@ -61,8 +61,12 @@ The YouTube Assistant project is organized as follows:
 ```
 youtube-rag-app/
 ├── app/
-│   ├── main.py
-│   ├── ui.py
+│   ├── home.py
+│   ├── pages/
+│   ├────── chat_interface.py
+│   ├────── data_ingestion.py
+│   ├────── evauation.py
+│   ├────── ground_truth.py
 │   ├── transcript_extractor.py
 │   ├── data_processor.py
 │   ├── elasticsearch_handler.py
@@ -70,6 +74,7 @@ youtube-rag-app/
 │   ├── rag.py
 │   ├── query_rewriter.py
 │   └── evaluation.py
+│   └── utils.py
 ├── data/
 │   └── sqlite.db
 ├── config/
@@ -129,3 +134,6 @@ I used the LLM as a Judge metric to evaluate the quality of our RAG Flow on my l
 * PARTLY_RELEVANT - 0 (0%)
 * NON RELEVANT - 0 (0%)
 
+### Monitoring
+
+I used Grafana to monitor the metrics, user feedback, evaluation results, and search performance.

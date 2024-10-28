@@ -8,6 +8,25 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+# Define the RAG prompt template
+RAG_PROMPT_TEMPLATE = """
+You are an AI assistant analyzing YouTube video transcripts. Your task is to answer questions based on the provided transcript context.
+
+Context from transcript:
+{context}
+
+User Question: {question}
+
+Please provide a clear, concise answer based only on the information given in the context. If the context doesn't contain enough information to fully answer the question, acknowledge this in your response.
+
+Guidelines:
+1. Use only information from the provided context
+2. Be specific and direct in your answer
+3. If context is insufficient, say so
+4. Maintain accuracy and avoid speculation
+5. Use natural, conversational language
+""".strip()
+
 class RAGSystem:
     def __init__(self, data_processor):
         self.data_processor = data_processor
@@ -52,14 +71,10 @@ class RAGSystem:
 
     def get_prompt(self, user_query, relevant_docs):
         context = "\n".join([doc['content'] for doc in relevant_docs])
-        prompt = f"""You are AI Youtube transcript assistant that analyses youtube transcripts and responds back to the user query based on the Context shared with you. Please ensure that the answers are correct, meaningful, and help in answering the query.
-
-Context: {context}
-
-Question: {user_query}
-
-Answer:"""
-        return prompt
+        return RAG_PROMPT_TEMPLATE.format(
+            context=context,
+            question=user_query
+        )
 
     def query(self, user_query, search_method='hybrid', index_name=None):
         try:
