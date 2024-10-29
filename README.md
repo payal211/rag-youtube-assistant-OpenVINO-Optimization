@@ -36,6 +36,10 @@ The main columns in our data structure are:
 
 This schema allows for comprehensive storage of video metadata alongside the transcript content, enabling rich querying and analysis capabilities.
 
+## Demo
+Please note that the code is also deployed on hugging face spaces and utilises FAISS as the vector store and not elasticsearch. Also, I can't use ollama on hugging face and hence I use transformers package and google flan-T5 model for creating the embeddings.
+https://huggingface.co/spaces/ganesh3/rag-youtube-assistant
+
 ## Functionality
 
 The YouTube Assistant offers the following key features:
@@ -137,3 +141,7 @@ I used the LLM as a Judge metric to evaluate the quality of our RAG Flow on my l
 ### Monitoring
 
 I used Grafana to monitor the metrics, user feedback, evaluation results, and search performance.
+
+### Screenshot
+
+Please refer screenshots.md
