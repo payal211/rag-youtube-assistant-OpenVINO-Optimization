@@ -1,3 +1,5 @@
+optimum[openvino]
+openvino-genai
 streamlit
 youtube_transcript_api
 sentence-transformers
@@ -15,3 +17,9 @@ tqdm
 python-dotenv
 certifi
 httplib2
+
+# # To test pytoch original model on CPU
+# accelerate
+
+# # To test ONNX Model
+# onnxruntime

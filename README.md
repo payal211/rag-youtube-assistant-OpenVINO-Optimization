@@ -1,4 +1,6 @@
-# YouTube Assistant
+# YouTube Assistant with Optimized Model
+
+Forked Origina;l code from 
 
 ## Problem Description
 
@@ -34,11 +36,37 @@ The main columns in our data structure are:
 }
 ```
 
+
 This schema allows for comprehensive storage of video metadata alongside the transcript content, enabling rich querying and analysis capabilities.
 
-## Demo
-Please note that the code is also deployed on hugging face spaces and utilises FAISS as the vector store and not elasticsearch. Also, I can't use ollama on hugging face and hence I use transformers package and google flan-T5 model for creating the embeddings.
-https://huggingface.co/spaces/ganesh3/rag-youtube-assistant
+Model Optimization Steps
+Step 1: Model Download and Testing
+Download the Phi-3-mini-128k-instruct PT model from Hugging Face and test its performance.
+Step 2: Export to ONNX
+Export the PyTorch model to ONNX format and validate the conversion.
+python
+Copy code
+import torch
+
+# Load the PT model and test it
+python test_pt_model.py
+
+
+# Export to ONNX
+python export_to_onnx.py 
+
+
+Step 3: Convert ONNX to OpenVINO or PyTorch to OpenVINO
+Convert the ONNX model to OpenVINO format and test it to ensure smooth operation on CPU with the same accuracy and increased inference speed.
+
+bash
+Copy code for PyTorch to OpenVINO
+optimum-cli export openvino --model "Phi-3-mini-4k-instruct" --task text-generation-with-past --weight-format int4 --group-size 128 --ratio 0.6 --sym --trust-remote-code ./model/phi3-instruct/fp32 
+
+bash
+Copy code for ONNX to OpenVINO
+
+optimum-cli export openvino --model "dir_to_model.onnx" --task text-generation-with-past --weight-format int4 --group-size 128 --ratio 0.6 --sym --trust-remote-code ./model/phi3-instruct/fp32 
 
 ## Functionality
 
@@ -86,6 +114,11 @@ youtube-rag-app/
 ├── requirements.txt
 ├── Dockerfile
 └── docker-compose.yml
+└── test_pt_model.py
+└── export_to_onnx.py
+└── test_onnx_model.py
+└── test_ov_model.py 
+
 ```
 
 ### Directory and File Descriptions:
@@ -105,6 +138,10 @@ youtube-rag-app/
 - `requirements.txt`: Lists all Python dependencies
 - `Dockerfile`: Defines the Docker image for the application
 - `docker-compose.yml`: Orchestrates the application and its services
+- `test_pt_model.py`: Inferencing original pytorch model
+- `export_to_onnx.py`: Export model PyTorch to ONNX format
+- `test_onnx_model.py`: Inferencing ONNX model
+- `test_ov_model.py`: Inferencing OpenVINO model
 
 ## Getting Started
 
