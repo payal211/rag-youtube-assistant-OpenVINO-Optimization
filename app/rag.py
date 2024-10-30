@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-import ollama
 import logging
 import time
+import openvino_genai as ov_genai
 
 load_dotenv()
 
@@ -30,44 +30,21 @@ Guidelines:
 class RAGSystem:
     def __init__(self, data_processor):
         self.data_processor = data_processor
-        self.model = os.getenv('OLLAMA_MODEL', 'phi3')
-        self.ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
-        self.timeout = int(os.getenv('OLLAMA_TIMEOUT', 240))
-        self.max_retries = int(os.getenv('OLLAMA_MAX_RETRIES', 3))
+        self.model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int8-ov')
+        self.device = os.getenv('OPENVINO_DEVICE', 'CPU')
         
-        self.check_ollama_service()
-
-    def check_ollama_service(self):
-        try:
-            ollama.list()
-            logger.info("Ollama service is accessible.")
-            self.pull_model()
-        except Exception as e:
-            logger.error(f"An error occurred while connecting to Ollama: {e}")
-            logger.error(f"Please ensure Ollama is running and accessible at {self.ollama_host}")
-
-    def pull_model(self):
-        try:
-            ollama.pull(self.model)
-            logger.info(f"Successfully pulled model {self.model}.")
-        except Exception as e:
-            logger.error(f"Error pulling model {self.model}: {e}")
+        # Initialize the OpenVINO pipeline
+        self.pipe = ov_genai.LLMPipeline(self.model_path, self.device)
+        logger.info(f"OpenVINO model loaded from {self.model_path} on device {self.device}")
 
     def generate(self, prompt):
-        for attempt in range(self.max_retries):
-            try:
-                response = ollama.chat(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                print("Printing the response from OLLAMA: "+response['message']['content'])
-                return response['message']['content']
-            except Exception as e:
-                logger.error(f"Error generating response on attempt {attempt + 1}: {e}")
-                if attempt == self.max_retries - 1:
-                    logger.error("All retries exhausted. Unable to generate response.")
-                    return None
-                time.sleep(2 ** attempt)  # Exponential backoff
+        try:
+            response = self.pipe.generate(prompt, max_length=2000)
+            logger.info("Generated response from OpenVINO model.")
+            return response
+        except Exception as e:
+            logger.error(f"Error generating response: {e}")
+            return None
 
     def get_prompt(self, user_query, relevant_docs):
         context = "\n".join([doc['content'] for doc in relevant_docs])
@@ -88,14 +65,12 @@ class RAGSystem:
                 return "I couldn't find any relevant information to answer your query.", ""
 
             prompt = self.get_prompt(user_query, relevant_docs)
-            
-            response = ollama.chat(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            
-            answer = response['message']['content']
-            return answer, prompt
+            answer = self.generate(prompt)
+
+            if answer is not None:
+                return answer, prompt
+            else:
+                return "An error occurred while generating the answer.", ""
         except Exception as e:
             logger.error(f"An error occurred in the RAG system: {e}")
             return f"An error occurred: {str(e)}", ""
