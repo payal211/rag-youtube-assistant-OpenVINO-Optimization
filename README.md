@@ -63,12 +63,24 @@ Convert the ONNX model to OpenVINO format and test it to ensure smooth operation
 bash
 Copy code for PyTorch to OpenVINO
 
-optimum-cli export openvino --model "Phi-3-mini-4k-instruct" --task text-generation-with-past --weight-format int4 --group-size 128 --ratio 0.6 --sym --trust-remote-code ./model/phi3-instruct/fp32 
+optimum-cli export openvino --model "./Phi-3-mini-128k-instruct" \
+    --task text-generation-with-past \
+    --weight-format int4 \
+    --group-size 128 \
+    --ratio 0.6 \
+    --sym \
+    --trust-remote-code /Phi-3-mini-128k-instruct-int4-ov
 
 bash
 Copy code for ONNX to OpenVINO
 
-optimum-cli export openvino --model "dir_to_model.onnx" --task text-generation-with-past --weight-format int4 --group-size 128 --ratio 0.6 --sym --trust-remote-code ./model/phi3-instruct/fp32 
+optimum-cli export openvino --model "Phi-3-mini-128k-instruct_onnx" \
+    --task text-generation-with-past \
+    --weight-format int4 \
+    --group-size 128 \
+    --ratio 0.6 \
+    --sym \
+    --trust-remote-code /Phi-3-mini-128k-instruct-int4-ov
 
 ## Functionality
 
@@ -113,13 +125,14 @@ youtube-rag-app/
 │   └── sqlite.db
 ├── config/
 │   └── config.yaml
+├── Phi-3-mini-128k-instruct
 ├── requirements.txt
 ├── Dockerfile
-└── docker-compose.yml
-└── test_pt_model.py
-└── export_to_onnx.py
-└── test_onnx_model.py
-└── test_ov_model.py 
+├── docker-compose.yml
+├── test_pt_model.py
+├── export_to_onnx.py
+├── test_onnx_model.py
+├── test_ov_model.py 
 
 ```
 

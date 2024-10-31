@@ -30,7 +30,7 @@ Guidelines:
 class RAGSystem:
     def __init__(self, data_processor):
         self.data_processor = data_processor
-        self.model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int8-ov')
+        self.model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')
         self.device = os.getenv('OPENVINO_DEVICE', 'CPU')
         
         # Initialize the OpenVINO pipeline
