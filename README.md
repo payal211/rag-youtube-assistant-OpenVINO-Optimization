@@ -62,6 +62,7 @@ Convert the ONNX model to OpenVINO format and test it to ensure smooth operation
 
 bash
 Copy code for PyTorch to OpenVINO
+
 optimum-cli export openvino --model "Phi-3-mini-4k-instruct" --task text-generation-with-past --weight-format int4 --group-size 128 --ratio 0.6 --sym --trust-remote-code ./model/phi3-instruct/fp32 
 
 bash
