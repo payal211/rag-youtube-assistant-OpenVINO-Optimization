@@ -32,7 +32,7 @@ ENV PYTHONPATH=/app \
 RUN touch app/__init__.py app/pages/__init__.py
 
 # Download the Phi-3-mini-128k-instruct model
-RUN git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct ./Phi-3-mini-128k-instruct
+# RUN git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct 
 
 # Copy the application code and other files into the container
 COPY app/ ./app/
@@ -45,12 +45,13 @@ COPY export_to_onnx.py ./
 COPY test_onnx_model.py ./
 COPY test_pt_model.py ./
 COPY test_ov_model.py ./
+COPY Phi-3-mini-128k-instruct/ ./Phi-3-mini-128k-instruct/
 
 # # Export the model to ONNX format
 # RUN python export_to_onnx.py
 
 # Convert the ONNX model to OpenVINO format
-RUN optimum-cli export openvino --model "./Phi-3-mini-128k-instruct" \
+RUN optimum-cli export openvino --model "Phi-3-mini-128k-instruct" \
     --task text-generation-with-past \
     --weight-format int4 \
     --group-size 128 \
