@@ -148,8 +148,11 @@ youtube-rag-app/
 ## Getting Started
 
 git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
+
 cd rag-youtube-assistant-OpenVINO-Optimization
+
 docker-compose build app
+
 docker-compose up -d
 
 You need to have Docker Desktop installed on your laptop/workstation along with WSL2 on windows machine.
