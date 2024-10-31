@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build: .
@@ -5,14 +7,10 @@ services:
       - "8501:8501"
     depends_on:
       - elasticsearch
-      - ollama
     environment:
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
-      - OLLAMA_HOST=http://ollama:11434
-      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-120}
-      - OLLAMA_MAX_RETRIES=${OLLAMA_MAX_RETRIES:-3}
       - PYTHONPATH=/app
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
       - STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B"
@@ -77,18 +75,15 @@ services:
       timeout: 10s
       retries: 5
 
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
+  openvino:
+    image: openvino/ubuntu20_dev:latest  # Choose the appropriate OpenVINO image
     volumes:
-      - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        limits:
-          memory: 6G
+      - ./app:/app  # Your application directory
+    command: ["/bin/bash", "-c", "cd /app && ./convert_model.sh"]  # Adjust as needed for your conversion script
+    depends_on:
+      - app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]  # Adjust URL for health check if needed
       interval: 30s
       timeout: 10s
       retries: 5
@@ -97,7 +92,6 @@ volumes:
   esdata:
     driver: local
   grafana-storage:
-  ollama_data:
 
 networks:
   default:
