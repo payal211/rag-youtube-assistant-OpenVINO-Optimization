@@ -10,7 +10,6 @@ pandas
 numpy
 scikit-learn
 elasticsearch
-ollama
 requests
 matplotlib
 tqdm
@@ -19,7 +18,7 @@ certifi
 httplib2
 
 # # To test pytoch original model on CPU
-# accelerate
+accelerate
 
 # # To test ONNX Model
-# onnxruntime
+onnxruntime

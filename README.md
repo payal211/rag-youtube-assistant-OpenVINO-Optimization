@@ -41,16 +41,17 @@ This schema allows for comprehensive storage of video metadata alongside the tra
 
 Model Optimization Steps
 Step 1: Model Download and Testing
+
 Download the Phi-3-mini-128k-instruct PT model from Hugging Face and test its performance.
-Step 2: Export to ONNX
-Export the PyTorch model to ONNX format and validate the conversion.
-python
-Copy code
-import torch
+
+git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
 # Load the PT model and test it
 python test_pt_model.py
 
+
+Step 2: Export to ONNX
+Export the PyTorch model to ONNX format and validate the conversion.
 
 # Export to ONNX
 python export_to_onnx.py 
@@ -145,8 +146,8 @@ youtube-rag-app/
 
 ## Getting Started
 
-git clone git@github.com:ganesh3/rag-youtube-assistant.git
-cd rag-youtube-assistant
+git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
+cd rag-youtube-assistant-OpenVINO-Optimization
 docker-compose build app
 docker-compose up -d
 
