@@ -197,8 +197,10 @@ Your API key will be generated. Make sure to copy it, as you’ll need it for yo
 
     you need to create your .env file for setting up only the YOUTUBE_API_KEY. Please refer .env_template
 
+    # install dependencies
     pip install -r requirements.txt
 
+    # Clone the original model
     git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
     docker-compose build app
