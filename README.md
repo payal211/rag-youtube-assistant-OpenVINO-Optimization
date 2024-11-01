@@ -39,25 +39,30 @@ The main columns in our data structure are:
 
 This schema allows for comprehensive storage of video metadata alongside the transcript content, enabling rich querying and analysis capabilities.
 
-Model Optimization Steps
+# Model Optimization Steps
+
+#### Load the PT model and test it
+
 Step 1: Model Download and Testing
 
 Download the Phi-3-mini-128k-instruct PT model from Hugging Face and test its performance.
 
 git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
-# Load the PT model and test it
 python test_pt_model.py
 
+#### Export to ONNX
 
 Step 2: Export to ONNX
+
 Export the PyTorch model to ONNX format and validate the conversion.
 
-# Export to ONNX
 python export_to_onnx.py 
 
+#### Convert to OpenVINO Format .xml and .bin
 
 Step 3: Convert ONNX to OpenVINO or PyTorch to OpenVINO
+
 Convert the ONNX model to OpenVINO format and test it to ensure smooth operation on CPU with the same accuracy and increased inference speed.
 
 bash
