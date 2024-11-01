@@ -158,11 +158,36 @@ youtube-rag-app/
 - `test_onnx_model.py`: Inferencing ONNX model
 - `test_ov_model.py`: Inferencing OpenVINO model
 
+# Steps to generate YOUTUBE_API_KEY
+
+1. Create a Google Cloud Project
+Go to the Google Cloud Console.
+Click on Select a project or Create Project.
+Name your project and click Create.
+
+2. Enable the YouTube Data API
+In the Cloud Console, navigate to APIs & Services > Library.
+Search for "YouTube Data API v3" and select it.
+Click Enable.
+
+3. Create Credentials
+Go to APIs & Services > Credentials.
+Click on + CREATE CREDENTIALS and select API key.
+Your API key will be generated. Make sure to copy it, as you’ll need it for your API requests.
+
 ## Getting Started
+
+(Optional)
+conda create -n youtube-rag python-3.11 
+conda activate youtube-rag
 
 git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
 
 cd rag-youtube-assistant-OpenVINO-Optimization
+
+you need to create your .env file for setting up only the YOUTUBE_API_KEY. Please refer .env_template
+
+pip install -r requirements.txt
 
 git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
@@ -171,6 +196,8 @@ docker-compose build app
 docker-compose up -d
 
 You need to have Docker Desktop installed on your laptop/workstation along with WSL2 on windows machine.
+
+Open the browser and paste localhost:8501
 
 ## License
 GPL v3
