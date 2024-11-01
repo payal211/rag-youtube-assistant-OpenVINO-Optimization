@@ -41,7 +41,7 @@ This schema allows for comprehensive storage of video metadata alongside the tra
 
 # Model Optimization Steps
 
-#### Load the PT model and test it
+### Load the PT model and test it
 
 Step 1: Model Download and Testing
 
@@ -51,7 +51,7 @@ git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
 python test_pt_model.py
 
-#### Export to ONNX
+### Export to ONNX
 
 Step 2: Export to ONNX
 
@@ -59,7 +59,7 @@ Export the PyTorch model to ONNX format and validate the conversion.
 
 python export_to_onnx.py 
 
-#### Convert to OpenVINO Format .xml and .bin
+### Convert to OpenVINO Format .xml and .bin
 
 Step 3: Convert ONNX to OpenVINO or PyTorch to OpenVINO
 
