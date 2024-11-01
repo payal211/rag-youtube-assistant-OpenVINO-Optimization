@@ -178,8 +178,9 @@ Your API key will be generated. Make sure to copy it, as you’ll need it for yo
 ## Getting Started
 
 ### (Optional)
-conda create -n youtube-rag python-3.11 
-conda activate youtube-rag
+    conda create -n youtube-rag python-3.11 
+    
+    conda activate youtube-rag
 
 git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
 
