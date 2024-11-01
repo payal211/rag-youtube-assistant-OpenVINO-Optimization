@@ -133,6 +133,7 @@ youtube-rag-app/
 ├── export_to_onnx.py
 ├── test_onnx_model.py
 ├── test_ov_model.py 
+├── .env
 
 ```
 
@@ -157,6 +158,7 @@ youtube-rag-app/
 - `export_to_onnx.py`: Export model PyTorch to ONNX format
 - `test_onnx_model.py`: Inferencing ONNX model
 - `test_ov_model.py`: Inferencing OpenVINO model
+- `.env` : YOITUBE_API_KEY credentials
 
 ## Steps to generate YOUTUBE_API_KEY
 
@@ -179,22 +181,24 @@ Your API key will be generated. Make sure to copy it, as you’ll need it for yo
 
 ### (Optional)
     conda create -n youtube-rag python-3.11 
-    
+
     conda activate youtube-rag
 
-git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
+### Clone the repository
 
-cd rag-youtube-assistant-OpenVINO-Optimization
+    git clone git@github.com:payal211/rag-youtube-assistant-OpenVINO-Optimization.git
 
-you need to create your .env file for setting up only the YOUTUBE_API_KEY. Please refer .env_template
+    cd rag-youtube-assistant-OpenVINO-Optimization
 
-pip install -r requirements.txt
+    you need to create your .env file for setting up only the YOUTUBE_API_KEY. Please refer .env_template
 
-git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
+    pip install -r requirements.txt
 
-docker-compose build app
+    git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
 
-docker-compose up -d
+    docker-compose build app
+
+    docker-compose up -d
 
 You need to have Docker Desktop installed on your laptop/workstation along with WSL2 on windows machine.
 
