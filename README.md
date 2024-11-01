@@ -158,7 +158,7 @@ youtube-rag-app/
 - `test_onnx_model.py`: Inferencing ONNX model
 - `test_ov_model.py`: Inferencing OpenVINO model
 
-# Steps to generate YOUTUBE_API_KEY
+## Steps to generate YOUTUBE_API_KEY
 
 1. Create a Google Cloud Project
 Go to the Google Cloud Console.
@@ -177,7 +177,7 @@ Your API key will be generated. Make sure to copy it, as you’ll need it for yo
 
 ## Getting Started
 
-(Optional)
+### (Optional)
 conda create -n youtube-rag python-3.11 
 conda activate youtube-rag
 
