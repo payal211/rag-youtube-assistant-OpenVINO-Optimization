@@ -1,6 +1,6 @@
 # YouTube Assistant with Optimized Model
 
-Forked Origina;l code from 
+Forked Original code from https://github.com/ganesh3/rag-youtube-assistant
 
 ## Problem Description
 
