@@ -185,7 +185,7 @@ Your API key will be generated. Make sure to copy it, as you’ll need it for yo
 ## Getting Started
 
 ### (Optional)
-    conda create -n youtube-rag python-3.11 
+    conda create -n youtube-rag python=3.11 
 
     conda activate youtube-rag
 
