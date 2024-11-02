@@ -39,7 +39,7 @@ COPY app/ ./app/
 COPY config/ ./config/
 COPY data/ ./data/
 COPY grafana/ ./grafana/
-COPY .env ./
+# COPY .env ./
 COPY .streamlit/config.toml /root/.streamlit/config.toml
 COPY export_to_onnx.py ./
 COPY test_onnx_model.py ./
