@@ -10,16 +10,23 @@ RUN apt-get update && apt-get install -y \
     curl \
     software-properties-common \
     git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
+# Add OpenVINO and optimum dependencies to requirements
+RUN echo "optimum[openvino]" >> requirements.txt && \
+    echo "transformers" >> requirements.txt && \
+    echo "torch" >> requirements.txt && \
+    echo "openvino" >> requirements.txt
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p app/pages config data grafana logs /root/.streamlit
+RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=/app \
@@ -31,38 +38,37 @@ ENV PYTHONPATH=/app \
 # Create empty __init__.py files
 RUN touch app/__init__.py app/pages/__init__.py
 
-# Download the Phi-3-mini-128k-instruct model
-# RUN git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct 
-
-# Copy the application code and other files into the container
-COPY app/ ./app/
-COPY config/ ./config/
-COPY data/ ./data/
-COPY grafana/ ./grafana/
-# COPY .env ./
-COPY .streamlit/config.toml /root/.streamlit/config.toml
-COPY export_to_onnx.py ./
-COPY test_onnx_model.py ./
-COPY test_pt_model.py ./
-COPY test_ov_model.py ./
-COPY Phi-3-mini-128k-instruct/ ./Phi-3-mini-128k-instruct/
-
-# # Export the model to ONNX format
-# RUN python export_to_onnx.py
-
-# Convert the ONNX model to OpenVINO format
-RUN optimum-cli export openvino --model "Phi-3-mini-128k-instruct" \
+# Download and process the model
+WORKDIR /app/models
+RUN git lfs install && \
+    git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
+    optimum-cli export openvino \
+    --model "Phi-3-mini-128k-instruct" \
     --task text-generation-with-past \
     --weight-format int4 \
     --group-size 128 \
     --ratio 0.6 \
     --sym \
-    --trust-remote-code /Phi-3-mini-128k-instruct-int4-ov
+    --trust-remote-code /app/models/Phi-3-mini-128k-instruct-int4-ov
+
+# Return to app directory
+WORKDIR /app
+
+# Copy the application code and other files
+COPY app/ ./app/
+COPY config/ ./config/
+COPY data/ ./data/
+COPY grafana/ ./grafana/
+COPY .streamlit/config.toml /root/.streamlit/config.toml
+COPY export_to_onnx.py ./
+COPY test_onnx_model.py ./
+COPY test_pt_model.py ./
+COPY test_ov_model.py ./
 
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
 
-# Create a healthcheck script
+# Create healthcheck script
 RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthcheck.sh && \
     chmod +x /healthcheck.sh
 
