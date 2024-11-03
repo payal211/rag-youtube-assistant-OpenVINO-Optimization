@@ -22,8 +22,11 @@ RUN echo "optimum[openvino]" >> requirements.txt && \
     echo "torch" >> requirements.txt && \
     echo "openvino" >> requirements.txt
 
+RUN pip install optimum[openvino] transformers && \
+    pip install torch   
+
 # Install Python dependencies
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
 
 # Create necessary directories
 RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
