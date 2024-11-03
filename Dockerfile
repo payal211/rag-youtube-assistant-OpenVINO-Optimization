@@ -4,16 +4,14 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies including git-lfs
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     software-properties-common \
     git \
-    git-lfs \
     wget \
-    && rm -rf /var/lib/apt/lists/* \
-    && git lfs install
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .
@@ -25,7 +23,7 @@ RUN echo "optimum[openvino]" >> requirements.txt && \
     echo "openvino" >> requirements.txt
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Create necessary directories
 RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
@@ -35,23 +33,17 @@ ENV PYTHONPATH=/app \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
     STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B" \
     STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
-    HF_HOME=/app/models  # Set Hugging Face cache directory
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0
 
 # Create empty __init__.py files
 RUN touch app/__init__.py app/pages/__init__.py
 
 # Download and process the model
 WORKDIR /app/models
-
-# Configure git for Hugging Face
-RUN git config --global credential.helper store && \
-    git config --global --add safe.directory '*'
-
-# Clone model and convert to OpenVINO
-RUN git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
+RUN git lfs install && \
+    git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
     optimum-cli export openvino \
-    --model "/app/models/Phi-3-mini-128k-instruct" \
+    --model "Phi-3-mini-128k-instruct" \
     --task text-generation-with-past \
     --weight-format int4 \
     --group-size 128 \
