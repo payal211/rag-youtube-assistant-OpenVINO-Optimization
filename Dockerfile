@@ -39,18 +39,23 @@ ENV PYTHONPATH=/app \
 # Create empty __init__.py files
 RUN touch app/__init__.py app/pages/__init__.py
 
+# Download openvino quantized model from huggingface 
+
+RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov
+
+
 # Download and process the model
-WORKDIR /app/models
-RUN git lfs install && \
-    git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
-    optimum-cli export openvino \
-    --model "Phi-3-mini-128k-instruct" \
-    --task text-generation-with-past \
-    --weight-format int4 \
-    --group-size 128 \
-    --ratio 0.6 \
-    --sym \
-    --trust-remote-code /app/models/Phi-3-mini-128k-instruct-int4-ov
+# WORKDIR /app/models
+# RUN git lfs install && \
+#     git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
+#     optimum-cli export openvino \
+#     --model "Phi-3-mini-128k-instruct" \
+#     --task text-generation-with-past \
+#     --weight-format int4 \
+#     --group-size 128 \
+#     --ratio 0.6 \
+#     --sym \
+#     --trust-remote-code /app/models/Phi-3-mini-128k-instruct-int4-ov
 
 # Return to app directory
 WORKDIR /app
