@@ -16,17 +16,15 @@ RUN apt-get update && apt-get install -y \
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Add OpenVINO and optimum dependencies to requirements
-RUN echo "optimum[openvino]" >> requirements.txt && \
-    echo "transformers" >> requirements.txt && \
-    echo "torch" >> requirements.txt && \
-    echo "openvino" >> requirements.txt
+# # Add OpenVINO and optimum dependencies to requirements
+# RUN echo "optimum[openvino]" >> requirements.txt && \
+#     echo "transformers" >> requirements.txt && \
+#     echo "torch" >> requirements.txt && \
+#     echo "openvino" >> requirements.txt
 
-RUN pip install optimum[openvino] transformers && \
-    pip install torch   
 
 # Install Python dependencies
-# RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Create necessary directories
 RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
