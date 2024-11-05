@@ -1,4 +1,8 @@
 import streamlit as st
+import os
+import sys
+import logging
+from transcript_extractor import test_api_key, initialize_youtube_api
 
 st.set_page_config(
     page_title="Home",
@@ -6,21 +10,34 @@ st.set_page_config(
     layout="wide"
 )
 
-from transcript_extractor import test_api_key, initialize_youtube_api
-import logging
-import os
-import sys
+# Commented the original logging setup
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler('app.log'),
+#         logging.StreamHandler(sys.stdout)
+#     ]
+# )
+# logger = logging.getLogger(__name__)
 
-# Configure logging
+# Updated logging setup with directory creation
+log_dir = '/app/logs'  # Specify the directory where log file will be stored
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)  # Create the directory if it doesn't exist
+
+log_file = os.path.join(log_dir, 'app.log')  # Absolute path to the log file
+
+# Configure logging with FileHandler for log file and StreamHandler for stdout
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler(log_file),  # Use the log file in the specified directory
+        logging.StreamHandler(sys.stdout)  # Also print logs to stdout (terminal)
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # Logger instance
 
 def main():
     st.title("YouTube Transcript RAG System 🎥")
