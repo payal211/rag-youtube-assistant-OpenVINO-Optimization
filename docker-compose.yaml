@@ -1,7 +1,6 @@
 services:
   app:
-  build: .
-    # image: yourdockerhubusername/youtube-rag:latest
+    build: .
     ports:
       - "8501:8501"
     depends_on:
