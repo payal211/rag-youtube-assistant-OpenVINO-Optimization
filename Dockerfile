@@ -29,6 +29,9 @@ RUN pip install -r requirements.txt
 # Create necessary directories
 RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
 
+# Create a logs directory and give it proper permissions
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
+
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=/app \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
