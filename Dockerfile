@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
-WORKDIR APP_HOME
+WORKDIR $APP_HOME
 
 # Create a non-root user and group
 RUN groupadd -g 1000 appgroup && \
@@ -30,13 +30,6 @@ RUN mkdir -p $APP_HOME/data $APP_HOME/logs && \
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# # Add OpenVINO and optimum dependencies to requirements
-# RUN echo "optimum[openvino]" >> requirements.txt && \
-#     echo "transformers" >> requirements.txt && \
-#     echo "torch" >> requirements.txt && \
-#     echo "openvino" >> requirements.txt
-
-
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
@@ -44,7 +37,7 @@ RUN pip install -r requirements.txt
 RUN mkdir -p $APP_HOME/pages config data grafana logs /root/.streamlit models
 
 # Create a logs directory and give it proper permissions
-RUN mkdir -p $APP_HOME/logs && chmod -R 777 /app/logs
+RUN mkdir -p $APP_HOME/logs && chmod -R 777 $APP_HOME/logs
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=$APP_HOME/ \
@@ -53,27 +46,12 @@ ENV PYTHONPATH=$APP_HOME/ \
     STREAMLIT_SERVER_PORT=8501 \
     STREAMLIT_SERVER_ADDRESS=0.0.0.0
 
-# Create empty __init__.py files
-RUN touch app/__init__.py app/pages/__init__.py
+# Create empty __init__.py files (ensure directories exist first)
+RUN mkdir -p app/pages && \
+    touch app/__init__.py app/pages/__init__.py
 
-# Download openvino quantized model from huggingface 
-
+# Download OpenVINO quantized model from HuggingFace
 RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov
-
-
-# Download and process the model
-# WORKDIR /app/models
-# RUN git lfs install && \
-#     git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct && \
-#     optimum-cli export openvino \
-#     --model "Phi-3-mini-128k-instruct" \
-#     --task text-generation-with-past \
-#     --weight-format int4 \
-#     --group-size 128 \
-#     --ratio 0.6 \
-#     --sym \
-#     --trust-remote-code /app/models/Phi-3-mini-128k-instruct-int4-ov
-
 
 # Copy the application code and other files
 COPY app/ ./app/
@@ -81,9 +59,9 @@ COPY config/ ./config/
 COPY data/ ./data/
 COPY grafana/ ./grafana/
 COPY .streamlit/config.toml /root/.streamlit/config.toml
-COPY export_to_onnx.py ./
-COPY test_onnx_model.py ./
-COPY test_pt_model.py ./
+COPY export_to_onnx.py ./ 
+COPY test_onnx_model.py ./ 
+COPY test_pt_model.py ./ 
 COPY test_ov_model.py ./
 
 # Make port 8501 available to the world outside this container
