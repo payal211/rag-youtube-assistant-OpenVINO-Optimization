@@ -1,7 +1,10 @@
 services:
   app:
-    # build: .
-    image: yourdockerhubusername/youtube-rag:latest
+    # # For building
+    # build: . 
+    # # For pulling from dockerhub
+    # # image: yourdockerhubusername/youtube-rag:latest
+    image: payal21/rag-youtube-assistant-openvino-optimization-app:latest
     ports:
       - "8501:8501"
     depends_on:
