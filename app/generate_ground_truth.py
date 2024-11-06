@@ -1,7 +1,8 @@
 import pandas as pd
 import json
 from tqdm import tqdm
-import ollama
+# import ollama
+import openvino_genai as ov_genai
 from elasticsearch import Elasticsearch
 import sqlite3
 import logging
@@ -69,10 +70,19 @@ def generate_questions(transcript, max_retries=3):
     while len(all_questions) < 10 and retries < max_retries:
         prompt = prompt_template.format(transcript=transcript)
         try:
-            response = ollama.chat(
-                model='phi3.5',
-                messages=[{"role": "user", "content": prompt}]
-            )
+            # response = ollama.chat(
+            #     model='phi3.5',
+            #     messages=[{"role": "user", "content": prompt}]
+            # )
+         
+            # Corrected: Using OpenVINO GenAI for question generation
+            model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')  # Model path environment variable
+            device = os.getenv('OPENVINO_DEVICE', 'CPU')  # Device to run on (e.g., 'CPU', 'GPU')
+            model = ov_genai.load_model(model_path, device=device)  # Load the OpenVINO GenAI model
+
+            # Generate the response using OpenVINO GenAI
+            response = model.generate(prompt)  # Corrected: Generate questions based on the prompt using OpenVINO GenAI
+                     
             questions = json.loads(response['message']['content'])['questions']
             all_questions.update(questions)
         except Exception as e:
