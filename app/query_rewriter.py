@@ -1,13 +1,26 @@
 import os
-import ollama
+# import ollama
+import openvino_genai as ov_genai
 import logging
 
 logger = logging.getLogger(__name__)
 
 class QueryRewriter:
     def __init__(self):
-        self.model = os.getenv('OLLAMA_MODEL', "phi3")
-        self.ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
+        # self.model = os.getenv('OLLAMA_MODEL', "phi3")
+        # self.ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
+        
+        # Get the model path and device from environment variables
+        self.model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')
+        self.device = os.getenv('OPENVINO_DEVICE', 'CPU')
+
+        # Load the OpenVINO model
+        try:
+            self.model = ov_genai.load_model(self.model_path, device=self.device)
+        except Exception as e:
+            logger.error(f"Error loading OpenVINO model: {e}")
+            raise
+        
 
     def generate(self, prompt):
         try:
