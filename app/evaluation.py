@@ -2,7 +2,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd
 import json
-import ollama
+# import ollama
+import openvino_genai as ov_genai
 import requests
 import sqlite3
 from tqdm import tqdm
@@ -57,16 +58,34 @@ class EvaluationSystem:
     def llm_as_judge(self, question, generated_answer, prompt_template):
         prompt = prompt_template.format(question=question, answer_llm=generated_answer)
         
+        # try:
+        #     response = ollama.chat(
+        #         model='phi3.5',
+        #         messages=[{"role": "user", "content": prompt}]
+        #     )
+        #     evaluation = json.loads(response['message']['content'])
+        #     return evaluation
+        # except Exception as e:
+        #     print(f"Error in LLM evaluation: {str(e)}")
+        #     return None
+
         try:
-            response = ollama.chat(
-                model='phi3.5',
-                messages=[{"role": "user", "content": prompt}]
-            )
-            evaluation = json.loads(response['message']['content'])
+            # Use OpenVINO GenAI to evaluate the model
+            # Load the OpenVINO model (ensure it's correctly loaded in your system)
+            model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')
+            device = os.getenv('OPENVINO_DEVICE', 'CPU')
+            model = ov_genai.load_model(model_path, device=device)
+
+            # Generate the response using OpenVINO GenAI
+            response = model.generate(prompt)
+            
+            # Assuming the response is a JSON object with keys like 'Relevance' and 'Explanation'
+            evaluation = json.loads(response['text'])
             return evaluation
         except Exception as e:
             print(f"Error in LLM evaluation: {str(e)}")
             return None
+    
 
     def evaluate_rag(self, rag_system, ground_truth_file, prompt_template=None):
         try:
