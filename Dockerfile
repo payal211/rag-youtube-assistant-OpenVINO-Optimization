@@ -33,6 +33,9 @@ RUN pip install -r requirements.txt
 RUN mkdir -p /app/pages /app/config /app/data /app/grafana /app/logs /app/.streamlit /app/models && \
     chmod -R 777 /app/pages /app/config /app/data /app/grafana /app/logs /app/.streamlit /app/models
 
+# Create empty __init__.py files
+RUN touch app/__init__.py app/pages/__init__.py && \
+    chown appuser:appgroup app/__init__.py app/pages/__init__.py
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=/app \
