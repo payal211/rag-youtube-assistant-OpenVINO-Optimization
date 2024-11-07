@@ -72,7 +72,7 @@ class EvaluationSystem:
         try:
             # Use OpenVINO GenAI to evaluate the model
             # Load the OpenVINO model (ensure it's correctly loaded in your system)
-            model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')
+            model_path = os.getenv('OPENVINO_MODEL_PATH', '/app/models/Phi-3-mini-128k-instruct-int4-ov')
             device = os.getenv('OPENVINO_DEVICE', 'CPU')
             model = ov_genai.load_model(model_path, device=device)
 
