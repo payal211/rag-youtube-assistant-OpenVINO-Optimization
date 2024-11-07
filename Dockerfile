@@ -11,7 +11,8 @@ ENV PYTHONUNBUFFERED=1 \
     STREAMLIT_SERVER_PORT=8501 \
     STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
     SQLITE_DATABASE_PATH=/app/data/sqlite.db \
-    LOG_DIR=/app/logs
+    LOG_DIR=/app/logs \
+    MODEL_DIR=/app/models
 
 # Set the working directory
 WORKDIR $APP_HOME
@@ -24,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     python3-dev \
+    git-lfs \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user and group
@@ -53,9 +55,11 @@ RUN touch /app/data/sqlite.db && \
 COPY --chown=appuser:appgroup requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download OpenVINO quantized model
-RUN cd /app/models && \
-    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int4-ov && \
+# Initialize git-lfs and download OpenVINO model
+RUN git lfs install && \
+    cd /app/models && \
+    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov && \
+    chmod -R 777 /app/models && \
     chown -R appuser:appgroup /app/models
 
 # Copy application files
@@ -72,7 +76,7 @@ RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthch
     chmod +x /healthcheck.sh && \
     chown appuser:appgroup /healthcheck.sh
 
-# Final permission check and fix
+# Final permission check
 RUN find /app -type d -exec chmod 777 {} + && \
     find /app -type f -exec chmod 666 {} + && \
     chmod +x /healthcheck.sh
