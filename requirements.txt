@@ -16,6 +16,7 @@ tqdm
 python-dotenv
 certifi
 httplib2
+protobuf==5.28.3
 
 # # To test pytoch original model on CPU
 # accelerate
