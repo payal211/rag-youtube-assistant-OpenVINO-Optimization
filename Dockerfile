@@ -26,11 +26,11 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user and group first
+# Create non-root user and group
 RUN groupadd -g 1000 appgroup && \
     useradd -u 1000 -g appgroup -ms /bin/bash appuser
 
-# Create all necessary directories with proper permissions
+# Create necessary directories with proper permissions
 RUN mkdir -p /app/data \
             /app/pages \
             /app/config \
@@ -39,20 +39,24 @@ RUN mkdir -p /app/data \
             /app/models \
             /app/.streamlit && \
     chown -R appuser:appgroup /app && \
-    chmod -R 775 /app && \
-    chmod g+s /app/data /app/logs
+    chmod -R 777 /app
 
 # Pre-create required files with proper permissions
-RUN touch /app/logs/app.log && \
-    touch /app/data/sqlite.db && \
-    chown appuser:appgroup /app/logs/app.log && \
+RUN touch /app/data/sqlite.db && \
+    touch /app/logs/app.log && \
     chown appuser:appgroup /app/data/sqlite.db && \
-    chmod 664 /app/logs/app.log && \
-    chmod 664 /app/data/sqlite.db
+    chown appuser:appgroup /app/logs/app.log && \
+    chmod 666 /app/data/sqlite.db && \
+    chmod 666 /app/logs/app.log
 
-# Copy requirements and install dependencies
+# Copy and install requirements
 COPY --chown=appuser:appgroup requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Download OpenVINO quantized model
+RUN cd /app/models && \
+    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov && \
+    chown -R appuser:appgroup /app/models
 
 # Copy application files
 COPY --chown=appuser:appgroup app/ ./app/
@@ -68,9 +72,9 @@ RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthch
     chmod +x /healthcheck.sh && \
     chown appuser:appgroup /healthcheck.sh
 
-# Final permission check
-RUN find /app -type d -exec chmod 775 {} + && \
-    find /app -type f -exec chmod 664 {} + && \
+# Final permission check and fix
+RUN find /app -type d -exec chmod 777 {} + && \
+    find /app -type f -exec chmod 666 {} + && \
     chmod +x /healthcheck.sh
 
 # Expose port
