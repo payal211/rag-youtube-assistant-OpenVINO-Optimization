@@ -55,7 +55,7 @@ EXPOSE 8501
 
 # Health check script
 RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /app/healthcheck.sh && \
-    chmod +x /healthcheck.sh
+    chmod +x /app/healthcheck.sh
 
 # Healthcheck definition
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
