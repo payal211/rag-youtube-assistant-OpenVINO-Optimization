@@ -36,6 +36,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Clone OpenVINO quantized model from HuggingFace
 RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov $APP_HOME/models/Phi-3-mini-128k-instruct-int8-ov
 
+# For Optimization
+# RUN git clone https://huggingface.co/microsoft/Phi-3-mini-128k-instruct
+
+# optimum-cli export openvino --model "./Phi-3-mini-128k-instruct"
+# --task text-generation-with-past
+# --weight-format int4
+# --group-size 128
+# --ratio 0.6
+# --sym
+# --trust-remote-code /Phi-3-mini-128k-instruct-int4-ov
 
 # Copy the application code and other files
 COPY app/ ./app/
