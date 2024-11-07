@@ -76,7 +76,7 @@ def generate_questions(transcript, max_retries=3):
             # )
          
             # Corrected: Using OpenVINO GenAI for question generation
-            model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')  # Model path environment variable
+            model_path = os.getenv('OPENVINO_MODEL_PATH', '/app/models/Phi-3-mini-128k-instruct-int4-ov')  # Model path environment variable
             device = os.getenv('OPENVINO_DEVICE', 'CPU')  # Device to run on (e.g., 'CPU', 'GPU')
             model = ov_genai.load_model(model_path, device=device)  # Load the OpenVINO GenAI model
 
