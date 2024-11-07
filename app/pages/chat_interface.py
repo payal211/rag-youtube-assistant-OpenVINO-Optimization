@@ -193,7 +193,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                                 st.session_state.feedback_given.add(message_key)
                                 st.success("Thank you for your feedback. We'll work to improve.")
                                 st.rerun()
-                                
+                                  
                     except Exception as e:
                         st.error(f"Error generating response: {str(e)}")
                         logger.error(f"Error in chat interface: {str(e)}")
