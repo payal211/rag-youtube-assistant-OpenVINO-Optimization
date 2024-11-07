@@ -12,15 +12,15 @@ services:
       - PYTHONPATH=/app
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
       - STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B"
-      - OPENSHIFT_DATA_DIR=/app/data
+      - SQLITE_DATABASE_PATH=/app/data/sqlite.db
+      - LOG_DIR=/app/logs
     env_file:
       - .env
     volumes:
-      - ./app:/app/app
-      - ./data:/app/data
-      - ./config:/app/config
-      - ./logs:/app/logs
-      - ./.streamlit:/root/.streamlit:ro
+      - app-data:/app/data
+      - app-logs:/app/logs
+      - app-config:/app/config
+      - ./.streamlit:/app/.streamlit:ro
     user: "1000:1000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
@@ -30,11 +30,18 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
-    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -60,13 +67,13 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=frser-sqlite-datasource
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=frser-sqlite-datasource
-      - GF_LOG_LEVEL=debug
+      - GF_LOG_LEVEL=info
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards
       - grafana-storage:/var/lib/grafana
-      - ./data:/app/data:ro
-      - ./logs:/var/log/grafana
+      - app-data:/app/data:ro
+      - app-logs:/var/log/grafana
     depends_on:
       - elasticsearch
     healthcheck:
@@ -76,8 +83,10 @@ services:
       retries: 5
 
 volumes:
+  app-data:
+  app-logs:
+  app-config:
   esdata:
-    driver: local
   grafana-storage:
 
 networks:
