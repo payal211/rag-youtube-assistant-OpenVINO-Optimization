@@ -71,13 +71,13 @@ COPY test_ov_model.py ./
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
 
-# Create healthcheck script
-RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthcheck.sh && \
-    chmod +x /healthcheck.sh
+# Create healthcheck script inside /app (accessible by appuser)
+RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > $APP_HOME/healthcheck.sh && \
+    chmod +x $APP_HOME/healthcheck.sh
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["/healthcheck.sh"]
+    CMD ["bash", "/app/healthcheck.sh"]
 
 # Run Streamlit
 CMD ["streamlit", "run", "app/home.py", "--server.port=8501", "--server.address=0.0.0.0"]
