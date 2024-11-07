@@ -27,6 +27,9 @@ RUN mkdir -p $APP_HOME/data $APP_HOME/logs $APP_HOME/pages $APP_HOME/.streamlit 
     chown -R appuser:appgroup $APP_HOME && \
     chmod -R 775 $APP_HOME
 
+# Ensure that the app directory and its subdirectories have the right permissions
+RUN chown -R appuser:appgroup $APP_HOME/app
+
 # Set the user to appuser (this is key to solving the permission issue)
 USER appuser
 
