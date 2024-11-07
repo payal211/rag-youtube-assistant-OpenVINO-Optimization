@@ -60,6 +60,9 @@ COPY --chown=appuser:appgroup test_onnx_model.py ./
 COPY --chown=appuser:appgroup test_pt_model.py ./
 COPY --chown=appuser:appgroup test_ov_model.py ./
 
+# Create empty __init__.py files
+RUN touch app/__init__.py app/pages/__init__.py
+
 # Create healthcheck script
 RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthcheck.sh && \
     chmod +x /healthcheck.sh && \
