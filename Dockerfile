@@ -19,6 +19,9 @@ RUN useradd -m myuser && chown -R myuser:myuser /app
 # Switch to the newly created non-root user
 USER myuser
 
+# Add /home/myuser/.local/bin to PATH to fix script location warning
+ENV PATH="/home/myuser/.local/bin:${PATH}"
+
 # Copy the requirements.txt file into the container
 COPY requirements.txt ./
 
@@ -45,6 +48,7 @@ ENV PYTHONPATH=/app \
 # Download the OpenVINO quantized model from Hugging Face
 RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov /app/models/Phi-3-mini-128k-instruct-int8-ov
 
+
 # Uncomment the following lines if you need to download and process the model:
 # WORKDIR /app/models
 # RUN git lfs install && \
@@ -57,6 +61,7 @@ RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov /
 #     --ratio 0.6 \
 #     --sym \
 #     --trust-remote-code /app/models/Phi-3-mini-128k-instruct-int4-ov
+
 
 # Set the working directory to /app (for later copy)
 WORKDIR /app
