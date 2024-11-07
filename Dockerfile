@@ -37,9 +37,6 @@ ENV PYTHONPATH=/app \
     STREAMLIT_SERVER_PORT=8501 \
     STREAMLIT_SERVER_ADDRESS=0.0.0.0
 
-# Create empty __init__.py files to avoid import errors
-RUN touch app/__init__.py app/pages/__init__.py
-
 # Download OpenVINO quantized model from HuggingFace
 RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov
 
