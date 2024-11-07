@@ -28,7 +28,8 @@ class DatabaseHandler:
             # Ensure proper permissions on database directory
             db_dir = os.path.dirname(self.db_path)
             if os.path.exists(db_dir):
-                os.chmod(db_dir, 0o775)
+                # os.chmod(db_dir, 0o775)
+                os.chmod(db_dir, 0o777)
 
             # Connect with write-ahead logging mode for better concurrent access
             self.conn = sqlite3.connect(
