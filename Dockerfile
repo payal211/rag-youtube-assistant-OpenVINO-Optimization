@@ -58,7 +58,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Initialize git-lfs and download OpenVINO model
 RUN git lfs install && \
     cd /app/models && \
-    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov && \
+    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int4-ov && \
     chmod -R 777 /app/models && \
     chown -R appuser:appgroup /app/models
 
