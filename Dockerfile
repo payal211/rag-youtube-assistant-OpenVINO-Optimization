@@ -27,12 +27,6 @@ RUN mkdir -p $APP_HOME/data $APP_HOME/logs $APP_HOME/pages $APP_HOME/.streamlit 
     chown -R appuser:appgroup $APP_HOME && \
     chmod -R 775 $APP_HOME
 
-# Ensure that the app directory and its subdirectories have the right permissions
-RUN chown -R appuser:appgroup $APP_HOME/app
-
-# Set the user to appuser (this is key to solving the permission issue)
-USER appuser
-
 # Copy the requirements file into the container
 COPY requirements.txt ./ 
 
@@ -40,9 +34,8 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Clone OpenVINO quantized model from HuggingFace
-USER root
 RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov $APP_HOME/models/Phi-3-mini-128k-instruct-int8-ov
-USER appuser
+
 
 # Copy the application code and other files
 COPY app/ ./app/
