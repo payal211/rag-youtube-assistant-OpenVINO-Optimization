@@ -17,10 +17,19 @@ services:
     env_file:
       - .env
     volumes:
-      - app-data:/app/data
-      - app-logs:/app/logs
-      - app-config:/app/config
-      - ./.streamlit:/app/.streamlit:ro
+      - type: bind
+        source: ./data
+        target: /app/data
+      - type: bind
+        source: ./logs
+        target: /app/logs
+      - type: bind
+        source: ./config
+        target: /app/config
+      - type: bind
+        source: ./.streamlit
+        target: /app/.streamlit
+        read_only: true
     user: "1000:1000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
@@ -72,8 +81,8 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards
       - grafana-storage:/var/lib/grafana
-      - app-data:/app/data:ro
-      - app-logs:/var/log/grafana
+      - ./data:/app/data:ro
+      - ./logs:/var/log/grafana
     depends_on:
       - elasticsearch
     healthcheck:
@@ -83,11 +92,10 @@ services:
       retries: 5
 
 volumes:
-  app-data:
-  app-logs:
-  app-config:
   esdata:
+    driver: local
   grafana-storage:
+    driver: local
 
 networks:
   default:
