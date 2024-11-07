@@ -197,7 +197,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                     except Exception as e:
                         st.error(f"Error generating response: {str(e)}")
                         logger.error(f"Error in chat interface: {str(e)}")
-
+                        
 def main():
     st.title("Chat Interface 💬")
     
