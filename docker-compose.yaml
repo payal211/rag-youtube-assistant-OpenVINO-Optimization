@@ -1,25 +1,18 @@
 services:
   app:
-    # # For building
-    build: . 
-    # # For pulling from dockerhub
-    # # image: yourdockerhubusername/youtube-rag:latest
-    # image: payal21/rag-youtube-assistant-openvino-optimization-app:latest
+    build: .
     ports:
       - "8501:8501"
     depends_on:
       - elasticsearch
-      - ollama
     environment:
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
-      # - OLLAMA_HOST=http://ollama:11434
-      # - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-120}
-      # - OLLAMA_MAX_RETRIES=${OLLAMA_MAX_RETRIES:-3}
       - PYTHONPATH=/app
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
       - STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B"
+      - OPENSHIFT_DATA_DIR=/app/data
     env_file:
       - .env
     volumes:
@@ -28,30 +21,64 @@ services:
       - ./config:/app/config
       - ./logs:/app/logs
       - ./.streamlit:/root/.streamlit:ro
+    user: "1000:1000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Rest of the services remain the same...
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
-    # ... rest of elasticsearch config
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   grafana:
     image: grafana/grafana:latest
-    # ... rest of grafana config
-
-  ollama:
-    image: ollama/ollama:latest
-    # ... rest of ollama config
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=frser-sqlite-datasource
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=frser-sqlite-datasource
+      - GF_LOG_LEVEL=debug
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+      - grafana-storage:/var/lib/grafana
+      - ./data:/app/data:ro
+      - ./logs:/var/log/grafana
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   esdata:
     driver: local
   grafana-storage:
-  ollama_data:
 
 networks:
   default:
