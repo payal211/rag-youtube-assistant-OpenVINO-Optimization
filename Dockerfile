@@ -23,7 +23,7 @@ RUN groupadd -g 1000 appgroup && \
     useradd -u 1000 -g appgroup -ms /bin/bash appuser
 
 # Create necessary directories with correct permissions
-RUN mkdir -p $APP_HOME/data $APP_HOME/logs && \
+RUN mkdir -p $APP_HOME/data $APP_HOME/logs $APP_HOME/pages $APP_HOME/.streamlit $APP_HOME/models $APP_HOME/grafana && \
     chown -R appuser:appgroup $APP_HOME && \
     chmod -R 775 $APP_HOME
 
@@ -31,31 +31,15 @@ RUN mkdir -p $APP_HOME/data $APP_HOME/logs && \
 USER appuser
 
 # Copy the requirements file into the container
-COPY requirements.txt ./
+COPY requirements.txt ./ 
 
 # Install Python dependencies
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p $APP_HOME/pages config data grafana logs $APP_HOME/.streamlit models
-
-# Set permissions for data, logs, and .streamlit directories (specifically for appuser)
-RUN chown -R appuser:appgroup $APP_HOME/data $APP_HOME/logs $APP_HOME/.streamlit && \
-    chmod -R 775 $APP_HOME/data $APP_HOME/logs $APP_HOME/.streamlit
-
-# Set Python path and Streamlit configs
-ENV PYTHONPATH=$APP_HOME/ \
-    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
-    STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B" \
-    STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_ADDRESS=0.0.0.0
-
-# Create empty __init__.py files (ensure directories exist first)
-RUN mkdir -p app/pages && \
-    touch app/__init__.py app/pages/__init__.py
-
-# Download OpenVINO quantized model from HuggingFace
-RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov
+# Clone OpenVINO quantized model from HuggingFace
+USER root
+RUN git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov $APP_HOME/models/Phi-3-mini-128k-instruct-int8-ov
+USER appuser
 
 # Copy the application code and other files
 COPY app/ ./app/
@@ -67,6 +51,17 @@ COPY export_to_onnx.py ./
 COPY test_onnx_model.py ./ 
 COPY test_pt_model.py ./ 
 COPY test_ov_model.py ./ 
+
+# Set Python path and Streamlit configs
+ENV PYTHONPATH=$APP_HOME/ \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
+    STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B" \
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0
+
+# Create empty __init__.py files (ensure directories exist first)
+RUN mkdir -p app/pages && \
+    touch app/__init__.py app/pages/__init__.py
 
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
