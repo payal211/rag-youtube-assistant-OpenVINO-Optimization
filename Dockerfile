@@ -27,8 +27,11 @@ RUN mkdir -p $APP_HOME/data $APP_HOME/logs && \
     chown -R appuser:appgroup $APP_HOME && \
     chmod -R 775 $APP_HOME
 
+# Set the user to appuser (this is key to solving the permission issue)
+USER appuser
+
 # Copy the requirements file into the container
-COPY requirements.txt .
+COPY requirements.txt ./
 
 # Install Python dependencies
 RUN pip install -r requirements.txt
@@ -36,8 +39,9 @@ RUN pip install -r requirements.txt
 # Create necessary directories
 RUN mkdir -p $APP_HOME/pages config data grafana logs /root/.streamlit models
 
-# Create a logs directory and give it proper permissions
-RUN mkdir -p $APP_HOME/logs && chmod -R 777 $APP_HOME/logs
+# Set permissions for data and logs directories (specifically for appuser)
+RUN chown -R appuser:appgroup $APP_HOME/data $APP_HOME/logs && \
+    chmod -R 775 $APP_HOME/data $APP_HOME/logs
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=$APP_HOME/ \
@@ -62,7 +66,7 @@ COPY .streamlit/config.toml /root/.streamlit/config.toml
 COPY export_to_onnx.py ./ 
 COPY test_onnx_model.py ./ 
 COPY test_pt_model.py ./ 
-COPY test_ov_model.py ./
+COPY test_ov_model.py ./ 
 
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
