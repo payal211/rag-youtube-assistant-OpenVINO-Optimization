@@ -54,7 +54,7 @@ COPY test_ov_model.py ./
 EXPOSE 8501
 
 # Health check script
-RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthcheck.sh && \
+RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /app/healthcheck.sh && \
     chmod +x /healthcheck.sh
 
 # Healthcheck definition
