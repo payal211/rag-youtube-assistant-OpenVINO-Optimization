@@ -27,7 +27,12 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
+# RUN mkdir -p app/pages config data grafana logs /root/.streamlit models
+
+# Create necessary directories and set proper permissions
+RUN mkdir -p /app/pages /app/config /app/data /app/grafana /app/logs /app/.streamlit /app/models && \
+    chmod -R 777 /app/pages /app/config /app/data /app/grafana /app/logs /root/.streamlit /app/models
+
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=/app \
