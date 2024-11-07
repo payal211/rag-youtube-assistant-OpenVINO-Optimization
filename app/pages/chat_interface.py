@@ -101,6 +101,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.button("👍", key=f"like_{message_key}"):
+
                             db_handler.add_user_feedback(
                                 video_id=video_id,
                                 chat_id=message['id'],
@@ -114,6 +115,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                     
                     with col2:
                         if st.button("👎", key=f"dislike_{message_key}"):
+
                             db_handler.add_user_feedback(
                                 video_id=video_id,
                                 chat_id=message['id'],
@@ -171,6 +173,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                         col1, col2 = st.columns(2)
                         with col1:
                             if st.button("👍", key=f"like_{message_key}"):
+
                                 db_handler.add_user_feedback(
                                     video_id=video_id,
                                     chat_id=chat_id,
@@ -183,6 +186,7 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                                 st.rerun()
                         with col2:
                             if st.button("👎", key=f"dislike_{message_key}"):
+
                                 db_handler.add_user_feedback(
                                     video_id=video_id,
                                     chat_id=chat_id,
@@ -193,11 +197,14 @@ def create_chat_interface(db_handler, rag_system, video_id, index_name, rewrite_
                                 st.session_state.feedback_given.add(message_key)
                                 st.success("Thank you for your feedback. We'll work to improve.")
                                 st.rerun()
-                                  
                     except Exception as e:
                         st.error(f"Error generating response: {str(e)}")
                         logger.error(f"Error in chat interface: {str(e)}")
-                        
+
+    except Exception as e:  # <-- This is your outer try-except block
+        st.error(f"Error in create_chat_interface: {str(e)}")
+        logger.error(f"Error in create_chat_interface: {str(e)}")
+
 def main():
     st.title("Chat Interface 💬")
     
@@ -209,7 +216,7 @@ def main():
     
     db_handler, data_processor, rag_system, query_rewriter = components
     
-    try:
+    try:  # Start of try block
         # Get system status
         system_status = get_system_status(db_handler)
         
@@ -221,7 +228,7 @@ def main():
         st.sidebar.header("Video Selection")
         
         # Get available videos
-        try:
+        try:  # Nested try block
             with sqlite3.connect(db_handler.db_path) as conn:
                 query = """
                     SELECT DISTINCT v.youtube_id, v.title, v.channel_name, v.upload_date, 
@@ -236,7 +243,7 @@ def main():
             logger.error(f"Error fetching videos: {str(e)}")
             st.error("Failed to fetch available videos")
             return
-            
+
         if df.empty:
             st.info("No videos available. Please process some videos in the Data Ingestion page first.")
             return
@@ -303,9 +310,10 @@ def main():
                     search_method
                 )
                 
-    except Exception as e:
+    except Exception as e:  # <-- Add except block
         logger.error(f"Error in main function: {str(e)}")
         st.error(f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     main()
