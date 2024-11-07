@@ -16,7 +16,8 @@ class QueryRewriter:
 
         # Load the OpenVINO model
         try:
-            self.model = ov_genai.load_model(self.model_path, device=self.device)
+            # self.model = ov_genai.load_model(self.model_path, device=self.device)
+            self.model = ov_genai.LLMPipeline(self.model_path, self.device)
         except Exception as e:
             logger.error(f"Error loading OpenVINO model: {e}")
             raise
