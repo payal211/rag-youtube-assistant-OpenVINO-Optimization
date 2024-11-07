@@ -23,8 +23,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Create necessary directories with the appropriate permissions
-RUN mkdir -p /app/data /app/pages /app/config /app/grafana /app/logs /app/models /app/.streamlit && \
-    chmod -R 777 /app/data /app/pages /app/config /app/grafana /app/logs /app/models /app/.streamlit
+RUN mkdir -p /app/data /app/pages /app/config /app/grafana /app/logs /app/models && \
+    chmod -R 777 /app/data /app/pages /app/config /app/grafana /app/logs /app/models
 
 # Set environment variables
 ENV PYTHONPATH=/app \
