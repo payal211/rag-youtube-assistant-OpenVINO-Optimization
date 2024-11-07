@@ -81,6 +81,12 @@ RUN find /app -type d -exec chmod 777 {} + && \
     find /app -type f -exec chmod 666 {} + && \
     chmod +x /healthcheck.sh
 
+# Set permissions for OpenShift
+RUN chgrp -R 0 /app && \
+    chmod -R g=u /app && \
+    chmod g+w /app/data && \
+    chmod g+w /app/logs
+
 # Expose port
 EXPOSE 8501
 
