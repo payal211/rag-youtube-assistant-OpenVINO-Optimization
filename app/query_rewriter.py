@@ -11,7 +11,7 @@ class QueryRewriter:
         # self.ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
         
         # Get the model path and device from environment variables
-        self.model_path = os.getenv('OPENVINO_MODEL_PATH', 'Phi-3-mini-128k-instruct-int4-ov')
+        self.model_path = os.getenv('OPENVINO_MODEL_PATH', '/app/models/Phi-3-mini-128k-instruct-int4-ov')
         self.device = os.getenv('OPENVINO_DEVICE', 'CPU')
 
         # Load the OpenVINO model
