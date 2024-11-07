@@ -55,7 +55,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Download OpenVINO quantized model
 RUN cd /app/models && \
-    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int8-ov && \
+    git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int4-ov && \
     chown -R appuser:appgroup /app/models
 
 # Copy application files
