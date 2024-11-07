@@ -37,11 +37,11 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p $APP_HOME/pages config data grafana logs /root/.streamlit models
+RUN mkdir -p $APP_HOME/pages config data grafana logs $APP_HOME/.streamlit models
 
-# Set permissions for data and logs directories (specifically for appuser)
-RUN chown -R appuser:appgroup $APP_HOME/data $APP_HOME/logs && \
-    chmod -R 775 $APP_HOME/data $APP_HOME/logs
+# Set permissions for data, logs, and .streamlit directories (specifically for appuser)
+RUN chown -R appuser:appgroup $APP_HOME/data $APP_HOME/logs $APP_HOME/.streamlit && \
+    chmod -R 775 $APP_HOME/data $APP_HOME/logs $APP_HOME/.streamlit
 
 # Set Python path and Streamlit configs
 ENV PYTHONPATH=$APP_HOME/ \
@@ -62,7 +62,7 @@ COPY app/ ./app/
 COPY config/ ./config/
 COPY data/ ./data/
 COPY grafana/ ./grafana/
-COPY .streamlit/config.toml /root/.streamlit/config.toml
+COPY .streamlit/config.toml $APP_HOME/.streamlit/config.toml
 COPY export_to_onnx.py ./ 
 COPY test_onnx_model.py ./ 
 COPY test_pt_model.py ./ 
