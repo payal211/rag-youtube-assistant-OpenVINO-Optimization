@@ -1,10 +1,20 @@
 services:
+  elasticsearch:
+    image: elasticsearch-rag:latest
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
   app:
     build: .
-    ports:
-      - "8501:8501"
-    depends_on:
-      - elasticsearch
+    image: youtube-rag:latest
     environment:
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
@@ -14,90 +24,35 @@ services:
       - STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B"
       - SQLITE_DATABASE_PATH=/app/data/sqlite.db
       - LOG_DIR=/app/logs
-    env_file:
-      - .env
-    volumes:
-      - type: bind
-        source: ./data
-        target: /app/data
-      - type: bind
-        source: ./logs
-        target: /app/logs
-      - type: bind
-        source: ./config
-        target: /app/config
-      - type: bind
-        source: ./.streamlit
-        target: /app/.streamlit
-        read_only: true
-    user: "1000:1000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - bootstrap.memory_lock=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
     ports:
-      - "9200:9200"
-      - "9300:9300"
-    deploy:
-      resources:
-        limits:
-          memory: 2G
+      - 8501:8501
     volumes:
-      - esdata:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - app-data:/app/data
+      - app-logs:/app/logs
+      - app-config:/app/config
+    depends_on:
+      - elasticsearch
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana-rag:latest
     ports:
-      - "3000:3000"
+      - 3000:3000
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=frser-sqlite-datasource
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=frser-sqlite-datasource
-      - GF_LOG_LEVEL=info
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/etc/grafana/dashboards
       - grafana-storage:/var/lib/grafana
-      - ./data:/app/data:ro
-      - ./logs:/var/log/grafana
+      - app-data:/app/data:ro
     depends_on:
       - elasticsearch
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - app
 
 volumes:
   esdata:
-    driver: local
+  app-data:
+  app-logs:
+  app-config:
   grafana-storage:
-    driver: local
-
-networks:
-  default:
-    driver: bridge
