@@ -1,6 +1,8 @@
 services:
   elasticsearch:
-    image: elasticsearch-rag:latest
+    # image: elasticsearch-rag:latest
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: elasticsearch-rag
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -34,7 +36,9 @@ services:
       - elasticsearch
 
   grafana:
-    image: grafana-rag:latest
+    image: grafana/grafana:latest
+    # image: grafana-rag:latest
+    container_name: grafana-rag
     ports:
       - 3000:3000
     environment:
