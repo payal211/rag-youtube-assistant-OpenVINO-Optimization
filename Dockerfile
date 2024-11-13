@@ -41,26 +41,25 @@ RUN mkdir -p /app/data \
             /app/models \
             /app/.streamlit && \
     chown -R appuser:appgroup /app && \
-    chmod -R 777 /app
+    chmod -R 755 /app  # Use 755 for directory permissions (owner full, others read/exec)
 
 # Pre-create required files with proper permissions
 RUN touch /app/data/sqlite.db && \
     touch /app/logs/app.log && \
     chown appuser:appgroup /app/data/sqlite.db && \
     chown appuser:appgroup /app/logs/app.log && \
-    chmod 666 /app/data/sqlite.db && \
-    chmod 666 /app/logs/app.log
+    chmod 660 /app/data/sqlite.db && \  # Use 660 for sensitive files (read/write for owner/group)
+    chmod 660 /app/logs/app.log
 
 # Copy and install requirements
-COPY --chown=appuser:appgroup requirements.txt ./
+COPY --chown=appuser:appgroup requirements.txt ./ 
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Initialize git-lfs and download OpenVINO model
 RUN git lfs install && \
     cd /app/models && \
     git clone https://huggingface.co/OpenVINO/Phi-3-mini-128k-instruct-int4-ov && \
-    chmod -R 777 /app/models && \
-    chown -R appuser:appgroup /app/models
+    chown -R appuser:appgroup /app/models  # Ensure the model files are owned by the appuser
 
 # Copy application files
 COPY --chown=appuser:appgroup app/ ./app/
@@ -77,15 +76,9 @@ RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthch
     chown appuser:appgroup /healthcheck.sh
 
 # Final permission check
-RUN find /app -type d -exec chmod 777 {} + && \
-    find /app -type f -exec chmod 666 {} + && \
+RUN find /app -type d -exec chmod 755 {} + && \  # Directories with 755
+    find /app -type f -exec chmod 644 {} + && \  # Files with 644 (less permissive)
     chmod +x /healthcheck.sh
-
-# Set permissions for OpenShift
-RUN chgrp -R 0 /app && \
-    chmod -R g=u /app && \
-    chmod g+w /app/data && \
-    chmod g+w /app/logs
 
 # Expose port
 EXPOSE 8501
@@ -93,9 +86,15 @@ EXPOSE 8501
 # Switch to non-root user
 USER appuser
 
-# Add healthcheck
+# Add healthcheck (ensure the container is healthy)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD ["/healthcheck.sh"]
 
 # Run Streamlit
 CMD ["streamlit", "run", "app/home.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+# Uncomment this block for OpenShift (not necessary for most Docker environments)
+# RUN chgrp -R 0 /app && \
+#     chmod -R g=u /app && \
+#     chmod g+w /app/data && \
+#     chmod g+w /app/logs
