@@ -75,10 +75,10 @@ RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthch
     chmod +x /healthcheck.sh && \
     chown appuser:appgroup /healthcheck.sh
 
-# Final permission check
+# Final permission check (ensure correct permissions for directories and files)
 RUN find /app -type d -exec chmod 755 {} + && \  # Directories with 755
     find /app -type f -exec chmod 644 {} + && \  # Files with 644 (less permissive)
-    chmod +x /healthcheck.sh
+    chmod +x /healthcheck.sh  # Make the healthcheck script executable
 
 # Expose port
 EXPOSE 8501
