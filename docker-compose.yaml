@@ -1,6 +1,5 @@
 services:
   elasticsearch:
-    # image: elasticsearch-rag:latest
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
     container_name: elasticsearch-rag
     environment:
@@ -13,6 +12,15 @@ services:
       - 9300:9300
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   app:
     build: .
@@ -26,18 +34,26 @@ services:
       - STREAMLIT_THEME_PRIMARY_COLOR="#FF4B4B"
       - SQLITE_DATABASE_PATH=/app/data/sqlite.db
       - LOG_DIR=/app/logs
+      - REQUESTS_CA_BUNDLE=/app/certs/ca-certificates.crt
+      - SSL_CERT_FILE=/app/certs/ca-certificates.crt
     ports:
       - 8501:8501
     volumes:
       - app-data:/app/data
       - app-logs:/app/logs
       - app-config:/app/config
+      - app-certs:/app/certs
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   grafana:
     image: grafana/grafana:latest
-    # image: grafana-rag:latest
     container_name: grafana-rag
     ports:
       - 3000:3000
@@ -51,12 +67,18 @@ services:
       - grafana-storage:/var/lib/grafana
       - app-data:/app/data:ro
     depends_on:
-      - elasticsearch
-      - app
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   esdata:
   app-data:
   app-logs:
   app-config:
+  app-certs:
   grafana-storage:
