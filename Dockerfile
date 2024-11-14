@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     python3-dev \
     git-lfs \
+    ca-certificates \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user and group
@@ -39,7 +41,8 @@ RUN mkdir -p /app/data \
             /app/grafana \
             /app/logs \
             /app/models \
-            /app/.streamlit && \
+            /app/.streamlit \
+            /app/certs && \
     chown -R appuser:appgroup /app && \
     chmod -R 777 /app
 
@@ -76,16 +79,20 @@ RUN echo '#!/bin/bash\ncurl -f http://localhost:8501/_stcore/health' > /healthch
     chmod +x /healthcheck.sh && \
     chown appuser:appgroup /healthcheck.sh
 
-# Final permission check
-RUN find /app -type d -exec chmod 777 {} + && \
-    find /app -type f -exec chmod 666 {} + && \
-    chmod +x /healthcheck.sh
-
 # Set permissions for OpenShift
 RUN chgrp -R 0 /app && \
     chmod -R g=u /app && \
     chmod g+w /app/data && \
-    chmod g+w /app/logs
+    chmod g+w /app/logs && \
+    chmod g+w /app/certs
+
+# Setup SSL certificates for YouTube API
+RUN cp /etc/ssl/certs/ca-certificates.crt /app/certs/ && \
+    chown appuser:appgroup /app/certs/ca-certificates.crt && \
+    chmod 644 /app/certs/ca-certificates.crt
+
+ENV REQUESTS_CA_BUNDLE=/app/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/app/certs/ca-certificates.crt
 
 # Expose port
 EXPOSE 8501
