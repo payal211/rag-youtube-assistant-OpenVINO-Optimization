@@ -1,7 +1,8 @@
 optimum[openvino]
 openvino-genai
 streamlit
-youtube_transcript_api
+# # Doesn't have support on OpenShiftAI
+# youtube_transcript_api
 sentence-transformers
 google-api-python-client
 google-auth-httplib2
